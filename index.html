@@ -457,6 +457,11 @@ body:not(.nav-collapsed) #sidebar-toggle { left:228px; }
   .landing-cta { padding:13px 32px; font-size:15px; }
 }
 
+/* Hide mobile-only elements on desktop */
+@media (min-width:769px) {
+  #btab-menu, #btab-overlay { display:none !important; }
+}
+
 /* Safe area for notch phones */
 #bottom-tabs {
   padding-bottom:env(safe-area-inset-bottom, 0);
