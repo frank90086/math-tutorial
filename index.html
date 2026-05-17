@@ -362,10 +362,11 @@ body:not(.nav-collapsed) #sidebar-toggle { left:228px; }
   border-radius:16px 16px 0 0;
   box-shadow:0 -8px 40px rgba(0,0,0,0.4);
   transform:translateY(110%);
-  transition:transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+  transition:transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 0.32s;
   pointer-events:none;
+  visibility:hidden;
 }
-#btab-menu.open { transform:translateY(0); pointer-events:auto; }
+#btab-menu.open { transform:translateY(0); pointer-events:auto; visibility:visible; transition:transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s; }
 .btab-menu-handle {
   width:36px; height:4px; background:var(--border);
   border-radius:2px; margin:10px auto 2px;
