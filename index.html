@@ -1,0 +1,3377 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>從三角函數到線性代數｜互動課程</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']], tags: 'ams' },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<style>
+:root {
+  --bg: #0f0f1a; --surface: #1a1a2e; --surface2: #16213e;
+  --accent: #7c3aed; --accent2: #06b6d4; --accent3: #f59e0b;
+  --text: #e2e8f0; --text2: #94a3b8; --text3: #64748b;
+  --border: #2d2d4e; --success: #10b981; --danger: #ef4444;
+  --grad1: linear-gradient(135deg, #7c3aed, #06b6d4);
+  --grad2: linear-gradient(135deg, #f59e0b, #ef4444);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; display:flex; min-height:100vh; }
+
+/* Sidebar */
+#sidebar {
+  width:220px; height:100vh; background:var(--surface); border-right:1px solid var(--border);
+  position:fixed; top:0; left:0; overflow-y:auto; overflow-x:hidden; padding:0 0 60px;
+  display:flex; flex-direction:column; z-index:100;
+  transition: transform 0.28s ease;
+  box-sizing:border-box;
+}
+#sidebar.collapsed { transform: translateX(-220px); }
+.sidebar-header { padding:20px; background:var(--grad1); }
+.sidebar-header h2 { font-size:15px; font-weight:700; color:#fff; letter-spacing:0.5px; }
+.sidebar-header p { font-size:11px; color:rgba(255,255,255,0.7); margin-top:4px; }
+.chapter-group { margin-top:8px; }
+.chapter-title {
+  padding:10px 16px; font-size:11px; font-weight:700; color:var(--text3);
+  text-transform:uppercase; letter-spacing:1px; background:var(--surface2);
+}
+.nav-item {
+  display:flex; align-items:center; gap:10px; padding:9px 16px 9px 20px;
+  cursor:pointer; transition:all 0.2s; font-size:13px; color:var(--text2);
+  border-left:3px solid transparent;
+}
+.nav-item:hover { background:rgba(124,58,237,0.1); color:var(--text); border-left-color:var(--accent); }
+.nav-item.active { background:rgba(124,58,237,0.15); color:var(--accent); border-left-color:var(--accent); font-weight:600; }
+.nav-item .num { font-size:11px; opacity:0.5; min-width:20px; }
+.progress-bar { height:3px; background:var(--border); margin:0 16px 8px; border-radius:2px; }
+.progress-fill { height:100%; background:var(--grad1); border-radius:2px; transition:width 0.3s; }
+
+/* Main */
+#main { margin-left:220px; flex:1; transition: margin-left 0.28s ease; }
+.section { display:none; padding:32px 36px; max-width:860px; }
+.section.active { display:block; }
+
+/* Typography */
+h1 { font-size:32px; font-weight:800; background:var(--grad1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; }
+h2 { font-size:22px; font-weight:700; color:var(--text); margin:36px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+h3 { font-size:16px; font-weight:600; color:var(--accent2); margin:24px 0 8px; }
+p { line-height:1.8; color:var(--text2); margin-bottom:12px; font-size:15px; }
+.lead { font-size:16px; color:var(--text); line-height:1.9; }
+.subtitle { color:var(--text3); font-size:14px; margin-bottom:28px; }
+
+/* Cards */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px; margin:20px 0; }
+.card.accent { border-color:rgba(124,58,237,0.4); background:rgba(124,58,237,0.05); }
+.card.cyan { border-color:rgba(6,182,212,0.4); background:rgba(6,182,212,0.05); }
+.card.amber { border-color:rgba(245,158,11,0.4); background:rgba(245,158,11,0.05); }
+.card.success { border-color:rgba(16,185,129,0.4); background:rgba(16,185,129,0.05); }
+
+/* Key insight box */
+.insight { display:flex; gap:14px; background:rgba(124,58,237,0.08); border:1px solid rgba(124,58,237,0.3); border-radius:10px; padding:16px 20px; margin:20px 0; }
+.insight .icon { font-size:20px; flex-shrink:0; margin-top:2px; }
+.insight p { margin:0; color:var(--text); }
+
+/* Math display */
+.math-block { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:20px; margin:16px 0; text-align:center; font-size:15px; }
+.derivation { background:var(--surface2); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:16px 20px; margin:16px 0; }
+.derivation .step { display:flex; align-items:center; gap:12px; padding:6px 0; }
+.derivation .step .label { font-size:11px; color:var(--text3); min-width:80px; }
+
+/* Interactive canvas area */
+.demo-area { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px; margin:24px 0; }
+.demo-area h3 { color:var(--accent); margin-top:0; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.demo-area h3::before { content:'▶'; font-size:10px; }
+.canvas-wrap { display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start; }
+canvas { border-radius:8px; border:1px solid var(--border); cursor:crosshair; background:#0d0d1f; }
+.canvas-info { flex:1; min-width:200px; }
+.value-display { background:var(--surface2); border-radius:8px; padding:12px 16px; margin-bottom:10px; }
+.value-display .label { font-size:11px; color:var(--text3); margin-bottom:4px; }
+.value-display .val { font-size:20px; font-weight:700; color:var(--accent2); font-family:monospace; }
+.val-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.hint { font-size:12px; color:var(--text3); margin-top:12px; line-height:1.5; }
+
+/* Sliders */
+.slider-group { margin:12px 0; }
+.slider-group label { display:flex; justify-content:space-between; font-size:13px; color:var(--text2); margin-bottom:6px; }
+.slider-group label span { color:var(--accent2); font-weight:600; font-family:monospace; }
+input[type=range] { width:100%; accent-color:var(--accent); }
+
+/* Navigation buttons */
+.nav-btns { display:flex; gap:12px; margin-top:48px; padding-top:24px; border-top:1px solid var(--border); }
+.btn { padding:10px 24px; border-radius:8px; border:none; cursor:pointer; font-size:14px; font-weight:600; transition:all 0.2s; }
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover { background:#6d28d9; transform:translateY(-1px); }
+.btn-secondary { background:var(--surface); color:var(--text2); border:1px solid var(--border); }
+.btn-secondary:hover { border-color:var(--accent); color:var(--text); }
+
+/* Table */
+table { width:100%; border-collapse:collapse; margin:16px 0; font-size:14px; }
+th { background:var(--surface2); padding:10px 14px; text-align:center; color:var(--text3); font-size:12px; text-transform:uppercase; letter-spacing:0.5px; }
+td { padding:10px 14px; text-align:center; border-top:1px solid var(--border); color:var(--text2); }
+tr:hover td { background:rgba(124,58,237,0.05); }
+
+/* Tag badges */
+.tag { display:inline-block; padding:2px 10px; border-radius:99px; font-size:11px; font-weight:600; margin:2px; }
+.tag-trig { background:rgba(124,58,237,0.15); color:#a78bfa; }
+.tag-vec { background:rgba(6,182,212,0.15); color:#22d3ee; }
+.tag-la { background:rgba(245,158,11,0.15); color:#fbbf24; }
+
+/* Keyframes */
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.section.active { animation:fadeUp 0.3s ease; }
+
+/* Connection arrows */
+.connection { display:flex; align-items:center; gap:12px; margin:16px 0; flex-wrap:wrap; }
+.connection .box { padding:10px 18px; border-radius:8px; font-size:13px; font-weight:600; }
+.connection .arrow { font-size:20px; color:var(--text3); }
+
+/* ── Sidebar accordion ──────────────────────────────────────── */
+.chapter-title {
+  display:flex; justify-content:space-between; align-items:center;
+  cursor:pointer; user-select:none;
+  padding-right:14px;
+}
+.chapter-title:hover { color:var(--accent); }
+.chap-arrow {
+  font-size:11px; color:var(--text2); opacity:0.7;
+  transition: transform 0.25s ease;
+  flex-shrink:0;
+}
+.chapter-group.open .chap-arrow { transform: rotate(180deg); }
+.chap-items {
+  overflow:hidden;
+  max-height:0;
+  transition: max-height 0.3s ease;
+}
+.chapter-group.open .chap-items { max-height:600px; }
+
+/* ── Sidebar toggle & responsive ───────────────────────────── */
+.nav-item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nav-item .num {
+  flex-shrink: 0;
+}
+#sidebar-toggle {
+  position:fixed; top:12px; left:12px; z-index:200;
+  width:36px; height:36px; border-radius:8px;
+  background:var(--surface2); border:1px solid var(--border);
+  color:var(--text); font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition: left 0.28s ease, background 0.2s;
+}
+#sidebar-toggle:hover { background:var(--surface); }
+#sidebar.collapsed ~ #sidebar-toggle,
+body.nav-collapsed #sidebar-toggle { left:12px; }
+body:not(.nav-collapsed) #sidebar-toggle { left:228px; }
+
+#main.expanded { margin-left:0 !important; }
+
+@media (max-width: 860px) {
+  #sidebar { transform: translateX(-220px); }
+  #main { margin-left:0 !important; }
+  body:not(.nav-collapsed) #sidebar-toggle { left:12px; }
+}
+
+/* ── Chapter 1 Summary styles ───────────────────────────────── */
+@keyframes nodeIn {
+  from { opacity:0; transform:translateY(14px) scale(0.92); }
+  to   { opacity:1; transform:translateY(0)    scale(1); }
+}
+@keyframes arrowIn {
+  from { opacity:0; transform:scaleX(0); }
+  to   { opacity:1; transform:scaleX(1); }
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(18px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.flow-node {
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  background:linear-gradient(135deg,#1e293b,#0f172a);
+  border:1px solid rgba(100,180,255,0.25); border-radius:10px;
+  padding:0.6rem 0.5rem; gap:2px; min-width:95px;
+  opacity:0; animation: nodeIn 0.5s ease forwards;
+}
+.flow-node .flow-icon { font-size:1.3rem; }
+.flow-node strong { font-size:0.78rem; color:#e2e8f0; }
+.flow-node small  { font-size:0.68rem; color:#64748b; }
+.flow-arrow {
+  font-size:1.4rem; color:#4ade80; opacity:0;
+  animation: arrowIn 0.3s ease forwards;
+  transform-origin: left center;
+}
+.formula-card {
+  background:linear-gradient(135deg,#1e293b,#0f172a);
+  border:1px solid rgba(100,180,255,0.2); border-radius:10px;
+  padding:0.9rem 1rem; display:flex; flex-direction:column; gap:0.4rem;
+}
+.formula-tag {
+  font-size:0.72rem; font-weight:bold; letter-spacing:0.05em;
+  color:#4ade80; text-transform:uppercase;
+}
+.formula-card small { font-size:0.78rem; color:#64748b; line-height:1.5; }
+.fade-card {
+  opacity:0; animation: fadeUp 0.6s ease forwards;
+}
+</style>
+</head>
+<body>
+
+<button id="sidebar-toggle" onclick="toggleSidebar()" title="收合側欄">☰</button>
+<nav id="sidebar">
+  <div class="sidebar-header" style="padding-right:0.5rem;">
+    <h2>📐 數學三部曲</h2>
+    <p>從三角函數到線性代數</p>
+  </div>
+  <div class="progress-bar" style="margin-top:16px;"><div class="progress-fill" id="progress" style="width:6%"></div></div>
+
+  <div class="chapter-group open" id="chap-0">
+    <div class="chapter-title" onclick="toggleChap('chap-0')">序章<span class="chap-arrow">▾</span></div>
+    <div class="chap-items">
+      <div class="nav-item active" onclick="goto(0)" id="nav0"><span class="num">0</span> 總覽與學習地圖</div>
+    </div>
+  </div>
+  <div class="chapter-group" id="chap-1">
+    <div class="chapter-title" onclick="toggleChap('chap-1')">第一章｜三角函數<span class="chap-arrow">▾</span></div>
+    <div class="chap-items">
+      <div class="nav-item" onclick="goto(1)" id="nav1"><span class="num">1.1</span> 弧度：角度的語言</div>
+      <div class="nav-item" onclick="goto(2)" id="nav2"><span class="num">1.2</span> 單位圓定義</div>
+      <div class="nav-item" onclick="goto(3)" id="nav3"><span class="num">1.3</span> 重要恆等式推導</div>
+      <div class="nav-item" onclick="goto(4)" id="nav4"><span class="num">1.4</span> 複數平面與旋轉</div>
+      <div class="nav-item" onclick="goto(5)" id="nav5"><span class="num">1.5</span> 加法公式的幾何證明</div>
+      <div class="nav-item" onclick="goto(6)" id="nav6"><span class="num">1.6</span> 自然常數 e 的本質</div>
+      <div class="nav-item" onclick="goto(7)" id="nav7"><span class="num">1.7</span> 歐拉公式與複數橋梁</div>
+      <div class="nav-item" onclick="goto(8)" id="nav8"><span class="num">1.8</span> 第一章總整理</div>
+    </div>
+  </div>
+  <div class="chapter-group" id="chap-2">
+    <div class="chapter-title" onclick="toggleChap('chap-2')">第二章｜向量<span class="chap-arrow">▾</span></div>
+    <div class="chap-items">
+      <div class="nav-item" onclick="goto(9)" id="nav9"><span class="num">2.1</span> 向量的幾何意義</div>
+      <div class="nav-item" onclick="goto(10)" id="nav10"><span class="num">2.2</span> 內積：cosθ 回來了</div>
+      <div class="nav-item" onclick="goto(11)" id="nav11"><span class="num">2.3</span> 外積：sinθ 回來了</div>
+    </div>
+  </div>
+  <div class="chapter-group" id="chap-3">
+    <div class="chapter-title" onclick="toggleChap('chap-3')">第三章｜線性代數<span class="chap-arrow">▾</span></div>
+    <div class="chap-items">
+      <div class="nav-item" onclick="goto(12)" id="nav12"><span class="num">3.1</span> 矩陣 = 線性變換</div>
+      <div class="nav-item" onclick="goto(13)" id="nav13"><span class="num">3.2</span> 旋轉矩陣與三角函數</div>
+      <div class="nav-item" onclick="goto(14)" id="nav14"><span class="num">3.3</span> 行列式的幾何意義</div>
+      <div class="nav-item" onclick="goto(15)" id="nav15"><span class="num">3.4</span> 特徵值與特徵向量</div>
+    </div>
+  </div>
+  <div class="chapter-group" id="chap-4">
+    <div class="chapter-title" onclick="toggleChap('chap-4')">大一統<span class="chap-arrow">▾</span></div>
+    <div class="chap-items">
+      <div class="nav-item" onclick="goto(16)" id="nav16"><span class="num">終</span> 三者的深刻連結</div>
+    </div>
+  </div>
+</nav>
+
+<main id="main">
+
+<!-- SECTION 0: 總覽 -->
+<div class="section active" id="sec0">
+  <h1>從三角函數到線性代數</h1>
+  <p class="subtitle">一條優美的數學之路——理解背後的幾何靈魂</p>
+  <div class="insight">
+    <div class="icon">🧭</div>
+    <p>這三個領域不是孤立的——它們是<strong>同一個深刻思想的不同語言</strong>。三角函數描述旋轉，向量描述方向，線性代數描述變換。它們在旋轉矩陣裡完美交匯。</p>
+  </div>
+  <h2>學習地圖</h2>
+  <div class="connection">
+    <div class="box" style="background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.4);color:#a78bfa;">📐 三角函數<br><small>sin, cos, tan<br>旋轉 · 週期性</small></div>
+    <div class="arrow">→</div>
+    <div class="box" style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.4);color:#22d3ee;">🔀 向量<br><small>方向 · 投影<br>內積 · 外積</small></div>
+    <div class="arrow">→</div>
+    <div class="box" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;">⬛ 線性代數<br><small>矩陣 · 變換<br>特徵值 · 行列式</small></div>
+  </div>
+  <h2>三個關鍵橋梁</h2>
+  <div class="card accent">
+    <h3>橋梁 1：向量的夾角</h3>
+    <p>兩個向量的<strong>內積</strong>定義為 $\mathbf{a} \cdot \mathbf{b} = |\mathbf{a}||\mathbf{b}|\cos\theta$。<span class="tag tag-trig">三角</span>直接出現在<span class="tag tag-vec">向量</span>的核心定義中。</p>
+  </div>
+  <div class="card cyan">
+    <h3>橋梁 2：旋轉矩陣</h3>
+    <p>把一個向量旋轉角度 $\theta$，對應的<span class="tag tag-la">矩陣</span>是 $\begin{pmatrix}\cos\theta & -\sin\theta \\ \sin\theta & \cos\theta\end{pmatrix}$，三角函數成為線性代數的核心。</p>
+  </div>
+  <div class="card amber">
+    <h3>橋梁 3：傅立葉分析</h3>
+    <p><span class="tag tag-trig">三角函數</span>是函數空間的<strong>正交基底</strong>——這是<span class="tag tag-la">線性代數</span>的語言。任何函數都能「分解」成三角函數的疊加，如同向量分解。</p>
+  </div>
+  <div class="nav-btns"><button class="btn btn-primary" onclick="goto(1)">開始學習 →</button></div>
+</div>
+
+<!-- SECTION 1: 弧度 -->
+<div class="section" id="sec1">
+  <h1>1.1 弧度：角度的自然語言</h1>
+  <p class="lead">為什麼數學家不用「度」？因為弧度是角度在微積分中唯一「自然」的單位。</p>
+  <h2>什麼是弧度？</h2>
+  <p>一個<strong>弧度（radian）</strong>定義為：在半徑為 $r$ 的圓上，弧長等於半徑時，圓心角的大小。</p>
+  <div class="math-block">$$\theta \text{（弧度）} = \frac{\text{弧長}}{\text{半徑}} = \frac{s}{r}$$</div>
+  <div class="insight">
+    <div class="icon">💡</div>
+    <p>整個圓的弧長是 $2\pi r$，所以 $360° = \frac{2\pi r}{r} = 2\pi$ 弧度。這就是為什麼 $\pi \approx 3.14159$ 到處出現——它是圓的<em>半圓弧度</em>，是幾何的自然常數。</p>
+  </div>
+  <h2>轉換公式</h2>
+  <div class="math-block">$$\text{弧度} = \text{度數} \times \frac{\pi}{180} \qquad \text{度數} = \text{弧度} \times \frac{180}{\pi}$$</div>
+  <table>
+    <tr><th>角度</th><th>弧度（精確）</th><th>弧度（近似）</th></tr>
+    <tr><td>0°</td><td>0</td><td>0</td></tr>
+    <tr><td>30°</td><td>$\pi/6$</td><td>0.524</td></tr>
+    <tr><td>45°</td><td>$\pi/4$</td><td>0.785</td></tr>
+    <tr><td>60°</td><td>$\pi/3$</td><td>1.047</td></tr>
+    <tr><td>90°</td><td>$\pi/2$</td><td>1.571</td></tr>
+    <tr><td>180°</td><td>$\pi$</td><td>3.14159…</td></tr>
+    <tr><td>360°</td><td>$2\pi$</td><td>6.28318…</td></tr>
+  </table>
+  <h2>為什麼弧度更自然？完整推導</h2>
+
+  <div class="card accent">
+    <h3>第一步：從導數的定義出發</h3>
+    <p>導數的定義是極限：</p>
+    <div class="math-block">$$\frac{d}{dx}\sin x = \lim_{h \to 0} \frac{\sin(x+h) - \sin(x)}{h}$$</div>
+    <p>套用加法公式 $\sin(x+h) = \sin x \cos h + \cos x \sin h$，展開分子：</p>
+    <div class="math-block">$$= \lim_{h \to 0} \frac{\sin x \cos h + \cos x \sin h - \sin x}{h}$$</div>
+    <p>整理，把含 $\sin x$ 與含 $\cos x$ 的項分開：</p>
+    <div class="math-block">$$= \lim_{h \to 0} \left[ \sin x \cdot \frac{\cos h - 1}{h} + \cos x \cdot \frac{\sin h}{h} \right]$$</div>
+  </div>
+
+  <div class="card cyan">
+    <h3>第二步：兩個關鍵極限（弧度制下）</h3>
+    <p>整個推導的命運，取決於這兩個極限的值：</p>
+    <div class="math-block">$$\lim_{h \to 0} \frac{\sin h}{h} = \,? \qquad \lim_{h \to 0} \frac{\cos h - 1}{h} = \,?$$</div>
+    <p><strong>幾何證明 $\displaystyle\lim_{h\to 0}\frac{\sin h}{h} = 1$（弧度制）：</strong></p>
+    <p>在單位圓上，角度 $h$（弧度）對應的弧長正好是 $h$，對應的弦長（即 $\sin h$ 的兩倍）在 $h\to 0$ 時與弧長趨於相同。更嚴格地，用面積夾擠：</p>
+    <div class="math-block">$$\underbrace{\frac{1}{2}\sin h \cos h}_{\triangle\text{ 面積}} \;\leq\; \underbrace{\frac{1}{2}h}_{\text{扇形面積}} \;\leq\; \underbrace{\frac{1}{2}\tan h}_{\text{大}\triangle\text{ 面積}}$$</div>
+    <p>三邊同除以 $\frac{1}{2}\sin h$（$h > 0$ 時為正）：</p>
+    <div class="math-block">$$\cos h \;\leq\; \frac{h}{\sin h} \;\leq\; \frac{1}{\cos h}$$</div>
+    <p>取倒數（夾擠方向反轉）：</p>
+    <div class="math-block">$$\cos h \;\leq\; \frac{\sin h}{h} \;\leq\; \frac{1}{\cos h}$$</div>
+    <p>當 $h \to 0$ 時，$\cos h \to 1$，由夾擠定理：</p>
+    <div class="math-block">$$\boxed{\lim_{h \to 0} \frac{\sin h}{h} = 1} \quad \text{（弧度制才成立！）}$$</div>
+    <p><strong>第二個極限</strong>：利用乘以共軛 $(\cos h + 1)$：</p>
+    <div class="math-block">$$\lim_{h \to 0}\frac{\cos h - 1}{h} = \lim_{h \to 0}\frac{(\cos h - 1)(\cos h + 1)}{h(\cos h + 1)} = \lim_{h \to 0}\frac{-\sin^2 h}{h(\cos h + 1)}$$</div>
+    <div class="math-block">$$= \lim_{h \to 0}\frac{\sin h}{h} \cdot \frac{-\sin h}{\cos h + 1} = 1 \cdot \frac{0}{2} = \boxed{0}$$</div>
+  </div>
+
+  <div class="card accent">
+    <h3>第三步：代回，得到乾淨的結果</h3>
+    <div class="derivation">
+      <div class="step"><span class="label">代入極限</span>$\dfrac{d}{dx}\sin x = \sin x \cdot 0 + \cos x \cdot 1$</div>
+      <div class="step"><span class="label">化簡</span>$= \cos x$ ✓</div>
+    </div>
+    <p>結果乾淨，沒有任何多餘係數。這就是弧度制的「自然性」：<strong>弧長 = 半徑 × 角度</strong>，讓 $\dfrac{\sin h}{h} \to 1$ 這個極限自動成立。</p>
+  </div>
+
+  <div class="card amber">
+    <h3>用度數會怎樣？推導係數的由來</h3>
+    <p>若角度 $x$ 以「度」為單位，則 $\sin(x°) = \sin\!\left(\dfrac{\pi x}{180}\right)$。</p>
+    <p>代入導數定義，令 $h$ 也以度為單位：</p>
+    <div class="math-block">$$\frac{d}{dx}\sin(x°) = \lim_{h \to 0} \frac{\sin\!\left(\frac{\pi(x+h)}{180}\right) - \sin\!\left(\frac{\pi x}{180}\right)}{h}$$</div>
+    <p>同樣展開，關鍵極限變成：</p>
+    <div class="math-block">$$\lim_{h \to 0} \frac{\sin\!\left(\frac{\pi h}{180}\right)}{h} = \lim_{h \to 0} \frac{\pi h/180 + O(h^3)}{h} = \frac{\pi}{180}$$</div>
+    <p>因此：</p>
+    <div class="math-block">$$\frac{d}{dx}\sin(x°) = \frac{\pi}{180}\cos(x°)$$</div>
+    <div class="insight" style="margin-top:16px;">
+      <div class="icon">⚠️</div>
+      <p>每次對度數下的三角函數微分，都要拖著這個 $\dfrac{\pi}{180} \approx 0.01745$ 的係數。微分兩次就變成 $\left(\dfrac{\pi}{180}\right)^2$，出現在物理、工程、機率的所有公式裡，讓一切變得醜陋。弧度制從根本上消除了這個問題。</p>
+    </div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(0)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(2)">下一節 →</button>
+  </div>
+</div>
+
+<!-- SECTION 2: 單位圓 -->
+<div class="section" id="sec2">
+  <h1>1.2 單位圓：三角函數的真正定義</h1>
+  <p class="lead">忘掉「直角三角形的對邊比斜邊」吧。真正的定義更深刻，也更美麗。</p>
+
+  <div class="insight">
+    <div class="icon">🔵</div>
+    <p><strong>單位圓</strong>是半徑為 1、圓心在原點的圓。對任意角度 $\theta$（弧度），在單位圓上找到對應的點 $P$：<br>
+    $\cos\theta$ = 點 $P$ 的<strong>橫坐標（x）</strong>，$\sin\theta$ = 點 $P$ 的<strong>縱坐標（y）</strong></p>
+  </div>
+
+  <div class="demo-area">
+    <h3>互動：單位圓探索器</h3>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">拖動滑桿或在圓上點擊，觀察 sin、cos、tan 的幾何意義</p>
+    <div class="canvas-wrap">
+      <canvas id="unitCircle" width="340" height="340"></canvas>
+      <div class="canvas-info">
+        <div class="slider-group">
+          <label>角度 θ <span id="degLabel">45°</span> = <span id="radLabel">π/4</span></label>
+          <input type="range" id="angleSlider" min="0" max="628" value="79" oninput="updateCircle()">
+        </div>
+        <div class="val-grid">
+          <div class="value-display"><div class="label">cos θ (x坐標)</div><div class="val" id="cosVal">0.707</div></div>
+          <div class="value-display"><div class="label">sin θ (y坐標)</div><div class="val" id="sinVal">0.707</div></div>
+        </div>
+        <div class="value-display"><div class="label">tan θ = sin θ / cos θ</div><div class="val" id="tanVal">1.000</div></div>
+        <div class="value-display"><div class="label">sin²θ + cos²θ</div><div class="val" id="pyVal" style="color:var(--success)">1.000</div></div>
+        <p class="hint">🔵 藍線 = cos θ（水平投影）<br>🔴 紅線 = sin θ（垂直投影）<br>🟡 黃線 = tan θ（x=1 直線上的截距）</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>幾何意義的洞見</h2>
+  <div class="card accent">
+    <h3>cos θ 是「水平影子」</h3>
+    <p>把單位圓上的點投影到 x 軸，得到的長度就是 $\cos\theta$。當 $\theta = 90°$，點在最頂端，水平投影為 0，所以 $\cos 90° = 0$。✓</p>
+  </div>
+  <div class="card cyan">
+    <h3>sin θ 是「垂直影子」</h3>
+    <p>把點投影到 y 軸，得到 $\sin\theta$。當 $\theta = 90°$，點在最頂端，垂直坐標為 1，所以 $\sin 90° = 1$。✓</p>
+  </div>
+  <div class="card amber">
+    <h3>畢達哥拉斯恆等式從定義直接得出</h3>
+    <p>單位圓的方程式是 $x^2 + y^2 = 1$，而 $x = \cos\theta$，$y = \sin\theta$，所以：</p>
+    <div class="math-block">$$\cos^2\theta + \sin^2\theta = 1$$</div>
+    <p>這不是需要記住的公式——這<em>就是</em>單位圓的定義！</p>
+  </div>
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(1)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(3)">下一節 →</button>
+  </div>
+</div>
+
+<!-- SECTION 3: 恆等式 -->
+<div class="section" id="sec3">
+  <h1>1.3 重要恆等式與推導</h1>
+  <p class="lead">恆等式不是要背的——理解它們的推導，你永遠忘不了。</p>
+  <h2>從畢氏恆等式出發</h2>
+  <div class="math-block">$$\sin^2\theta + \cos^2\theta = 1$$</div>
+  <p>兩邊除以 $\cos^2\theta$（假設 $\cos\theta \neq 0$）：</p>
+  <div class="derivation">
+    <div class="step"><span class="label">除 cos²θ</span> $\tan^2\theta + 1 = \sec^2\theta$</div>
+    <div class="step"><span class="label">除 sin²θ</span> $1 + \cot^2\theta = \csc^2\theta$</div>
+  </div>
+  <h2>負角公式</h2>
+
+  <div class="demo-area">
+    <h3>互動：負角——單位圓的 x 軸對稱</h3>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:14px;">拖動滑桿，觀察 θ 與 −θ 在單位圓上的對稱關係</p>
+    <div class="canvas-wrap">
+      <canvas id="symCanvas" width="320" height="320"></canvas>
+      <div class="canvas-info">
+        <div class="slider-group">
+          <label>角度 θ <span id="symDegLabel">50°</span></label>
+          <input type="range" id="symSlider" min="5" max="175" value="50" oninput="updateSym()">
+        </div>
+        <div class="val-grid">
+          <div class="value-display"><div class="label">cos θ</div><div class="val" id="symCos">—</div></div>
+          <div class="value-display"><div class="label">cos(−θ)</div><div class="val" id="symCosNeg" style="color:var(--success)">—</div></div>
+        </div>
+        <div class="val-grid">
+          <div class="value-display"><div class="label">sin θ</div><div class="val" id="symSin">—</div></div>
+          <div class="value-display"><div class="label">sin(−θ)</div><div class="val" id="symSinNeg" style="color:var(--danger)">—</div></div>
+        </div>
+        <p class="hint">🟣 θ 的點（上方）<br>🔴 −θ 的點（下方，x 軸鏡射）<br>── x 軸是對稱軸<br><br>觀察：橫坐標（cos）<strong>不變</strong>，縱坐標（sin）<strong>反號</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card accent">
+    <h3>幾何推導</h3>
+    <p>在單位圓定義下，角度 $\theta$ 對應的點是 $P = (\cos\theta,\ \sin\theta)$。</p>
+    <p>角度 $-\theta$ 是把 $\theta$ 的旋轉方向反過來——在幾何上，這等同於將點 $P$ <strong>關於 x 軸做鏡射</strong>。</p>
+    <div class="derivation">
+      <div class="step"><span class="label">鏡射規則</span>x 軸鏡射：$(x,\ y) \;\longmapsto\; (x,\ -y)$</div>
+      <div class="step"><span class="label">套用到 P</span>$(\cos\theta,\ \sin\theta) \;\longmapsto\; (\cos\theta,\ -\sin\theta)$</div>
+      <div class="step"><span class="label">讀出坐標</span>$-\theta$ 的點坐標為 $(\cos(-\theta),\ \sin(-\theta))$</div>
+      <div class="step"><span class="label">比較</span>$\cos(-\theta) = \cos\theta \quad$ 和 $\quad \sin(-\theta) = -\sin\theta$</div>
+    </div>
+    <div class="math-block">$$\boxed{\cos(-\theta) = \cos\theta} \qquad \boxed{\sin(-\theta) = -\sin\theta}$$</div>
+  </div>
+
+  <div class="card cyan">
+    <h3>奇函數與偶函數的幾何意義</h3>
+    <p>這兩個結果說明了 $\sin$ 和 $\cos$ 各自的對稱類型：</p>
+    <table>
+      <tr><th>函數</th><th>性質</th><th>圖形對稱</th><th>單位圓意義</th></tr>
+      <tr><td>$\cos\theta$</td><td>偶函數：$f(-x)=f(x)$</td><td>關於 <strong>y 軸</strong> 對稱</td><td>x 軸對稱，橫坐標不變</td></tr>
+      <tr><td>$\sin\theta$</td><td>奇函數：$f(-x)=-f(x)$</td><td>關於<strong>原點</strong>對稱</td><td>x 軸對稱，縱坐標反號</td></tr>
+      <tr><td>$\tan\theta$</td><td>奇函數：$f(-x)=-f(x)$</td><td>關於<strong>原點</strong>對稱</td><td>$\frac{-\sin\theta}{\cos\theta} = -\tan\theta$</td></tr>
+    </table>
+  </div>
+
+  <div class="demo-area">
+    <h3>圖示：偶函數 cos(x) 與奇函數 sin(x) 的對稱性</h3>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:14px;">拖動滑桿，看 $\theta$（紫點）和 $-\theta$（紅點）在兩個圖形上的位置關係</p>
+    <div class="slider-group" style="max-width:500px;margin-bottom:16px;">
+      <label>角度 θ <span id="oeDegLabel">40°</span></label>
+      <input type="range" id="oeSlider" min="5" max="170" value="40" oninput="updateOddEven()">
+    </div>
+    <canvas id="oddEvenCanvas" width="660" height="210" style="width:100%;max-width:660px;"></canvas>
+    <div style="display:flex;gap:32px;margin-top:14px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <p style="font-size:13px;color:var(--accent2);font-weight:600;margin-bottom:4px;">左圖：cos(x)　偶函數</p>
+        <p style="font-size:12px;color:var(--text3);line-height:1.7;">
+          🟡 黃虛線 = y 軸（對稱軸）<br>
+          ── 水平虛線連接兩點 → <strong>高度相同</strong><br>
+          結論：$\cos(-\theta) = \cos\theta$
+        </p>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <p style="font-size:13px;color:var(--danger);font-weight:600;margin-bottom:4px;">右圖：sin(x)　奇函數</p>
+        <p style="font-size:12px;color:var(--text3);line-height:1.7;">
+          ⭕ 原點（對稱中心）<br>
+          ── 斜虛線過原點連接兩點 → <strong>高度相反</strong><br>
+          結論：$\sin(-\theta) = -\sin\theta$
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <h2>餘角公式</h2>
+
+  <div class="demo-area">
+    <h3>互動：餘角——單位圓的 y = x 對稱</h3>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:14px;">拖動滑桿，看 θ 與 90°−θ 如何關於 y = x 互為鏡射</p>
+    <div class="canvas-wrap">
+      <canvas id="compCanvas" width="320" height="320"></canvas>
+      <div class="canvas-info">
+        <div class="slider-group">
+          <label>角度 θ <span id="compDegLabel">35°</span></label>
+          <input type="range" id="compSlider" min="5" max="85" value="35" oninput="updateComp()">
+        </div>
+        <div class="val-grid">
+          <div class="value-display"><div class="label">sin θ</div><div class="val" id="compSin">—</div></div>
+          <div class="value-display"><div class="label">cos(90°−θ)</div><div class="val" id="compCos90" style="color:var(--success)">—</div></div>
+        </div>
+        <div class="val-grid">
+          <div class="value-display"><div class="label">cos θ</div><div class="val" id="compCos">—</div></div>
+          <div class="value-display"><div class="label">sin(90°−θ)</div><div class="val" id="compSin90" style="color:var(--accent2)">—</div></div>
+        </div>
+        <p class="hint">🟣 θ 的點<br>🟡 (90°−θ) 的點<br>── 虛線 y = x 是對稱軸<br><br>觀察：兩點關於 y=x 鏡射，x、y 坐標<strong>互換</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card accent">
+    <h3>幾何推導：y = x 鏡射 ↔ 坐標互換</h3>
+    <p>$\theta$ 的對應點是 $P = (\cos\theta,\ \sin\theta)$，$90°-\theta$ 的對應點是 $Q = (\cos(90°-\theta),\ \sin(90°-\theta))$。</p>
+    <p>關鍵觀察：從 x 軸到角度 $\theta$，再繼續旋轉到 $90°$，剩餘的角度恰好是 $90°-\theta$。所以 $\theta$ 和 $90°-\theta$ 關於 <strong>$45°$ 角平分線（即 $y=x$）</strong> 互為鏡射。</p>
+    <div class="derivation">
+      <div class="step"><span class="label">y=x 鏡射</span>$(x,\ y) \;\longmapsto\; (y,\ x)$（x、y 坐標互換）</div>
+      <div class="step"><span class="label">套用到 P</span>$(\cos\theta,\ \sin\theta) \;\longmapsto\; (\sin\theta,\ \cos\theta)$</div>
+      <div class="step"><span class="label">讀出坐標</span>鏡射後的點就是 $Q = (\cos(90°-\theta),\ \sin(90°-\theta))$</div>
+      <div class="step"><span class="label">比較</span>$\cos(90°-\theta) = \sin\theta \quad$ 和 $\quad \sin(90°-\theta) = \cos\theta$</div>
+    </div>
+    <div class="math-block">$$\boxed{\sin\!\left(\frac{\pi}{2} - \theta\right) = \cos\theta} \qquad \boxed{\cos\!\left(\frac{\pi}{2} - \theta\right) = \sin\theta}$$</div>
+  </div>
+
+  <div class="card amber">
+    <h3>代數驗證：用加法公式再確認一次</h3>
+    <p>也可以直接把 $\alpha = \frac{\pi}{2},\ \beta = -\theta$ 代入加法公式：</p>
+    <div class="derivation">
+      <div class="step"><span class="label">sin 加法</span>$\sin\!\left(\frac{\pi}{2} - \theta\right) = \sin\frac{\pi}{2}\cos\theta - \cos\frac{\pi}{2}\sin\theta$</div>
+      <div class="step"><span class="label">代入值</span>$= 1 \cdot \cos\theta - 0 \cdot \sin\theta = \cos\theta$ ✓</div>
+      <div class="step"><span class="label">cos 加法</span>$\cos\!\left(\frac{\pi}{2} - \theta\right) = \cos\frac{\pi}{2}\cos\theta + \sin\frac{\pi}{2}\sin\theta$</div>
+      <div class="step"><span class="label">代入值</span>$= 0 \cdot \cos\theta + 1 \cdot \sin\theta = \sin\theta$ ✓</div>
+    </div>
+    <p style="margin-top:8px;">兩條路（幾何推導 vs 代數驗證）得到同一結果，互相印證。</p>
+  </div>
+
+  <div class="insight">
+    <div class="icon">🏷️</div>
+    <p>「co-sine」中的「co」來自拉丁文 <em>complementi</em>（餘角）。$\cos\theta$ 的原名就是「$\theta$ 的<em>餘角</em>的正弦」。餘角公式說的正是：這個名字不是巧合，而是幾何事實。</p>
+  </div>
+  <h2>補角公式</h2>
+
+  <div class="demo-area">
+    <h3>互動：補角——單位圓的 y 軸對稱</h3>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:14px;">拖動滑桿，觀察 θ 與 180°−θ 在單位圓上的對稱關係</p>
+    <div class="canvas-wrap">
+      <canvas id="suppCanvas" width="320" height="320"></canvas>
+      <div class="canvas-info">
+        <div class="slider-group">
+          <label>角度 θ <span id="suppDegLabel">40°</span></label>
+          <input type="range" id="suppSlider" min="5" max="175" value="40" oninput="updateSupp()">
+        </div>
+        <div class="val-grid">
+          <div class="value-display"><div class="label">sin θ</div><div class="val" id="suppSin">—</div></div>
+          <div class="value-display"><div class="label">sin(180°−θ)</div><div class="val" id="suppSinComp" style="color:var(--success)">—</div></div>
+        </div>
+        <div class="val-grid">
+          <div class="value-display"><div class="label">cos θ</div><div class="val" id="suppCos">—</div></div>
+          <div class="value-display"><div class="label">cos(180°−θ)</div><div class="val" id="suppCosComp" style="color:var(--danger)">—</div></div>
+        </div>
+        <p class="hint">🟣 θ 的點（右側）<br>🔴 (180°−θ) 的點（左側，y 軸鏡射）<br>🟡 y 軸 = 對稱軸<br><br>觀察：縱坐標（sin）<strong>不變</strong>，橫坐標（cos）<strong>反號</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card accent">
+    <h3>幾何推導：y 軸鏡射</h3>
+    <p>$\pi - \theta$ 與 $\theta$ 關於 <strong>y 軸</strong> 互為鏡射。y 軸鏡射規則是 $(x, y) \mapsto (-x, y)$，橫坐標反號、縱坐標不變：</p>
+    <div class="derivation">
+      <div class="step"><span class="label">θ 的點</span>$(\cos\theta,\ \sin\theta)$</div>
+      <div class="step"><span class="label">y 軸鏡射</span>$(\cos\theta,\ \sin\theta) \;\longmapsto\; (-\cos\theta,\ \sin\theta)$</div>
+      <div class="step"><span class="label">讀出坐標</span>$(\cos(\pi-\theta),\ \sin(\pi-\theta)) = (-\cos\theta,\ \sin\theta)$</div>
+    </div>
+    <div class="math-block">$$\boxed{\sin(\pi - \theta) = \sin\theta} \qquad \boxed{\cos(\pi - \theta) = -\cos\theta} \qquad \tan(\pi-\theta) = -\tan\theta$$</div>
+  </div>
+
+  <div class="card cyan">
+    <h3>代數驗證（加法公式）</h3>
+    <div class="derivation">
+      <div class="step"><span class="label">sin(π−θ)</span>$= \sin\pi\cos\theta - \cos\pi\sin\theta = 0\cdot\cos\theta - (-1)\cdot\sin\theta = \sin\theta$ ✓</div>
+      <div class="step"><span class="label">cos(π−θ)</span>$= \cos\pi\cos\theta + \sin\pi\sin\theta = (-1)\cdot\cos\theta + 0\cdot\sin\theta = -\cos\theta$ ✓</div>
+    </div>
+  </div>
+
+  <div class="card amber">
+    <h3>四種對稱：一張完整的對照表</h3>
+    <p>至此，我們學完了四種對稱變換，它們都從 y 軸、x 軸、y=x 線、原點的對稱得出：</p>
+    <table>
+      <tr><th>公式類型</th><th>對稱軸/中心</th><th>sin 的變化</th><th>cos 的變化</th></tr>
+      <tr><td><strong>負角</strong> $(-\theta)$</td><td>x 軸</td><td>$-\sin\theta$</td><td>$\cos\theta$（不變）</td></tr>
+      <tr><td><strong>補角</strong> $(\pi-\theta)$</td><td>y 軸</td><td>$\sin\theta$（不變）</td><td>$-\cos\theta$</td></tr>
+      <tr><td><strong>餘角</strong> $(\frac{\pi}{2}-\theta)$</td><td>y = x 線</td><td>$\cos\theta$（互換）</td><td>$\sin\theta$（互換）</td></tr>
+      <tr><td><strong>對頂角</strong> $(\pi+\theta)$</td><td>原點</td><td>$-\sin\theta$</td><td>$-\cos\theta$</td></tr>
+    </table>
+    <p style="margin-top:10px;font-size:13px;color:var(--text3)">最後一列是「補角+負角」的合成：先取補角 $(\pi-\theta)$，再取負角得 $-(\pi-\theta) = \theta-\pi$；或直接觀察 $\pi+\theta$ 的點是原點對稱。</p>
+  </div>
+
+  <h2>倍角公式</h2>
+
+  <div class="card accent">
+    <h3>sin(2α) 的完整推導</h3>
+    <p>核心想法：把 $2\alpha$ 拆成 $\alpha + \alpha$，然後用加法公式：</p>
+    <div class="derivation">
+      <div class="step"><span class="label">拆角</span>$\sin 2\alpha = \sin(\alpha + \alpha)$</div>
+      <div class="step"><span class="label">加法公式</span>$= \sin\alpha\cos\alpha + \cos\alpha\sin\alpha$</div>
+      <div class="step"><span class="label">合併同類</span>$= 2\sin\alpha\cos\alpha$</div>
+    </div>
+    <div class="math-block">$$\boxed{\sin 2\alpha = 2\sin\alpha\cos\alpha}$$</div>
+    <p><strong>幾何意義</strong>：$\sin\alpha$ 和 $\cos\alpha$ 是單位圓在角 $\alpha$ 處的直角三角形兩股。$\sin\alpha \cdot \cos\alpha$ 是這個三角形的面積，而 $\sin 2\alpha = 2 \times$ 面積——這正是三角形面積公式的另一種寫法：$\frac{1}{2} \cdot 1 \cdot 1 \cdot \sin 2\alpha = \sin\alpha\cos\alpha$。</p>
+  </div>
+
+  <div class="card cyan">
+    <h3>cos(2α) 的三種等價形式</h3>
+    <p>同樣從 $\cos(\alpha+\alpha)$ 出發：</p>
+    <div class="derivation">
+      <div class="step"><span class="label">加法公式</span>$\cos 2\alpha = \cos\alpha\cos\alpha - \sin\alpha\sin\alpha$</div>
+      <div class="step"><span class="label">第一形式</span>$= \cos^2\alpha - \sin^2\alpha$</div>
+    </div>
+    <p>再利用 $\sin^2\alpha + \cos^2\alpha = 1$ 做代換：</p>
+    <div class="derivation">
+      <div class="step"><span class="label">換掉 sin²α</span>代入 $\sin^2\alpha = 1 - \cos^2\alpha$：</div>
+      <div class="step"><span class="label">第二形式</span>$\cos 2\alpha = \cos^2\alpha - (1-\cos^2\alpha) = 2\cos^2\alpha - 1$</div>
+      <div class="step"><span class="label">換掉 cos²α</span>代入 $\cos^2\alpha = 1 - \sin^2\alpha$：</div>
+      <div class="step"><span class="label">第三形式</span>$\cos 2\alpha = (1-\sin^2\alpha) - \sin^2\alpha = 1 - 2\sin^2\alpha$</div>
+    </div>
+    <div class="math-block">$$\cos 2\alpha = \cos^2\alpha - \sin^2\alpha = 2\cos^2\alpha - 1 = 1 - 2\sin^2\alpha$$</div>
+    <p><strong>為什麼需要三種形式？</strong>積分時，根據被積函數只含 $\sin^2$ 或只含 $\cos^2$，選擇最方便的形式消去平方項。</p>
+  </div>
+
+  <div class="demo-area">
+    <h3>互動：倍角幾何圖解</h3>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:14px;">拖動滑桿，觀察 α（紫）和 2α（青）的關係，以及 sin(2α) = 2·sin α·cos α 的幾何拆解</p>
+    <div class="canvas-wrap">
+      <canvas id="dblCanvas" width="340" height="340"></canvas>
+      <div class="canvas-info">
+        <div class="slider-group">
+          <label>角度 α <span id="dblDegLabel">35°</span></label>
+          <input type="range" id="dblSlider" min="5" max="85" value="35" oninput="updateDouble()">
+        </div>
+        <div class="value-display"><div class="label">2α =</div><div class="val" id="dbl2alpha">70°</div></div>
+        <div class="value-display"><div class="label">sin(2α)（直接計算）</div><div class="val" id="dblSin2a">—</div></div>
+        <div class="value-display"><div class="label">2·sin α·cos α（公式）</div><div class="val" id="dbl2sc" style="color:var(--success)">—</div></div>
+        <p style="font-size:12px;color:var(--text3);margin-top:10px;line-height:1.7;">
+          cos(2α) 三種形式皆相等：<br>
+          <span style="color:#a78bfa">cos²α − sin²α</span> = <span id="dblv1">—</span><br>
+          <span style="color:#22d3ee">2cos²α − 1</span> = <span id="dblv2">—</span><br>
+          <span style="color:#f87171">1 − 2sin²α</span> = <span id="dblv3">—</span>
+        </p>
+        <p class="hint">🟣 紫弧 = α，🔵 青弧 = 2α<br>🟢 綠線 = sin(2α)（Q 的高度）<br>🔵 藍線 = cos α，🔴 紅線 = sin α（構成直角三角形）<br>面積 = ½ × sin α × cos α，sin(2α) = 2 × 面積</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card amber">
+    <h3>半角公式：cos(2α) 第三形式的直接應用</h3>
+    <p>從第三形式 $\cos 2\alpha = 1 - 2\sin^2\alpha$ 移項，令 $\alpha \to \frac{\theta}{2}$：</p>
+    <div class="derivation">
+      <div class="step"><span class="label">移項</span>$2\sin^2\alpha = 1 - \cos 2\alpha$</div>
+      <div class="step"><span class="label">除以 2</span>$\sin^2\alpha = \dfrac{1 - \cos 2\alpha}{2}$</div>
+      <div class="step"><span class="label">令 α=θ/2</span>$\sin^2\!\dfrac{\theta}{2} = \dfrac{1 - \cos\theta}{2}$</div>
+    </div>
+    <p>同理，從第二形式 $\cos 2\alpha = 2\cos^2\alpha - 1$：</p>
+    <div class="math-block">$$\sin^2\!\frac{\theta}{2} = \frac{1-\cos\theta}{2} \qquad \cos^2\!\frac{\theta}{2} = \frac{1+\cos\theta}{2} \qquad \tan^2\!\frac{\theta}{2} = \frac{1-\cos\theta}{1+\cos\theta}$$</div>
+    <p style="margin-top:8px;">半角公式在積分三角函數（$\int\sin^2 x\,dx$、$\int\cos^2 x\,dx$）時是標準工具，能消去平方使積分可算。</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(2)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(5)">下一節 →</button>
+  </div>
+</div>
+
+<!-- SECTION 4: 複數平面 -->
+<div class="section" id="sec4">
+  <h1>1.4 複數平面：數字有了方向</h1>
+  <p class="lead">複數不只是「虛數」的把戲——它是平面上每個點的代名詞，而乘法的幾何意義就是<strong>旋轉</strong>。</p>
+
+  <div class="insight">
+    <div class="icon">🌐</div>
+    <p>實數是<strong>一條線</strong>上的點。複數是<strong>平面上</strong>的點。這個看似微小的擴展，帶來了驚人的幾何力量——它讓「旋轉」變成了乘法。</p>
+  </div>
+
+  <h2>複數平面（Argand 平面）</h2>
+  <div class="card">
+    <p>複數 $z = a + bi$ 對應平面上的點 $(a,\, b)$：水平軸為<strong>實軸</strong>，垂直軸為<strong>虛軸</strong>。每個複數有兩種等價的表示：</p>
+    <div class="math-block">
+$$z = a + bi = r(\cos\theta + i\sin\theta)$$
+$$r = |z| = \sqrt{a^2+b^2} \quad \text{（模，即到原點的距離）}$$
+$$\theta = \arg(z) \quad \text{（輻角，即與正實軸的夾角）}$$
+    </div>
+    <p>直角座標 $(a,b)$ 與極座標 $(r,\theta)$ 之間的橋樑，正是三角函數：$a = r\cos\theta,\; b = r\sin\theta$。</p>
+  </div>
+
+  <h2>互動一：探索複數平面</h2>
+  <div class="card" style="display:flex;flex-wrap:wrap;gap:1.2rem;align-items:flex-start;">
+    <canvas id="cxPlaneCanvas" width="280" height="280" style="border-radius:8px;background:#0f172a;display:block;flex:0 0 auto;"></canvas>
+    <div style="flex:1;min-width:160px;">
+      <label>模 $r$：<span id="cxRLabel">1.00</span></label>
+      <input type="range" id="cxRSlider" min="20" max="100" value="100" oninput="updateCx()">
+      <label style="margin-top:0.8rem;display:block;">輻角 $\theta$：<span id="cxAngLabel">45°</span></label>
+      <input type="range" id="cxAngSlider" min="0" max="359" value="45" oninput="updateCx()">
+      <div class="value-display" style="margin-top:0.8rem;"><div class="label">實部 $a = r\cos\theta$</div><div class="val" id="cxRealVal">0.707</div></div>
+      <div class="value-display"><div class="label">虛部 $b = r\sin\theta$</div><div class="val" id="cxImagVal">0.707</div></div>
+      <div class="value-display"><div class="label">模 $|z|$</div><div class="val" id="cxModVal">1.000</div></div>
+      <p class="hint" style="margin-top:0.6rem;">當 $r=1$ 時，$z$ 落在<strong>單位圓</strong>上，與第 1.2 節的三角函數定義完全吻合！</p>
+    </div>
+  </div>
+
+  <div class="card cyan">
+    <p><strong>單位複數 ↔ 單位圓上的點 ↔ 旋轉角度</strong></p>
+    <p>模為 1 的複數 $z = \cos\theta + i\sin\theta$ 與三角函數的定義完全吻合。複數平面把「角度」和「複數」統一在同一個對象上，為加法公式的推導埋下伏筆。</p>
+  </div>
+
+  <h2>複數乘法 = 模相乘・輻角相加</h2>
+  <div class="card accent">
+    <p>設 $z_1 = r_1(\cos\alpha + i\sin\alpha)$，$z_2 = r_2(\cos\beta + i\sin\beta)$，直接展開：</p>
+    <div class="derivation">
+      <div class="step"><span class="label">展開</span>$z_1 z_2 = r_1 r_2 (\cos\alpha+i\sin\alpha)(\cos\beta+i\sin\beta)$</div>
+      <div class="step"><span class="label">$i^2=-1$</span>$= r_1 r_2\bigl[(\cos\alpha\cos\beta-\sin\alpha\sin\beta)+i(\sin\alpha\cos\beta+\cos\alpha\sin\beta)\bigr]$</div>
+      <div class="step"><span class="label">（用加法公式）</span>$= r_1 r_2\bigl[\cos(\alpha+\beta)+i\sin(\alpha+\beta)\bigr]$</div>
+    </div>
+    <div class="math-block">$$|z_1 z_2| = r_1 r_2, \qquad \arg(z_1 z_2) = \alpha + \beta$$</div>
+    <p><strong>幾何意義</strong>：乘以 $z_2$ = 把長度縮放 $r_2$ 倍，再逆時針<em>旋轉</em> $\beta$ 角。若 $r_2=1$（單位複數），則是<strong>純旋轉</strong>，長度不變。</p>
+  </div>
+
+  <h2>互動二：乘以單位複數 = 旋轉</h2>
+  <div class="card" style="display:flex;flex-wrap:wrap;gap:1.2rem;align-items:flex-start;">
+    <canvas id="cxMulCanvas" width="280" height="280" style="border-radius:8px;background:#0f172a;display:block;flex:0 0 auto;"></canvas>
+    <div style="flex:1;min-width:160px;">
+      <label>旋轉量 $\varphi$：<span id="cxPhiLabel">60°</span></label>
+      <input type="range" id="cxPhiSlider" min="0" max="359" value="60" oninput="updateCxMul()">
+      <div style="margin-top:1rem;line-height:2.2;font-size:0.9rem;">
+        <p><span style="color:#60a5fa;">●</span> 藍箭頭 = 原始複數 $z$（固定在角 30°）</p>
+        <p><span style="color:#a78bfa;">●</span> 紫箭頭 = 旋轉子 $e^{i\varphi}$（在單位圓上）</p>
+        <p><span style="color:#4ade80;">●</span> 綠箭頭 = 乘積 $e^{i\varphi} \cdot z$</p>
+        <p><span style="color:#fbbf24;">⌒</span> 黃弧 = 旋轉角 $\varphi$</p>
+      </div>
+      <p class="hint">乘以一個單位複數，就是把 $z$ 旋轉對應角度，長度完全不變。</p>
+    </div>
+  </div>
+
+  <div class="card cyan">
+    <p>🔑 <strong>預告下一節</strong>：加法公式的複數推導，正是利用此性質。旋轉 $\alpha$ 後再旋轉 $\beta$，等於旋轉 $\alpha+\beta$——這個幾何事實用代數語言寫出來，就是 $\cos(\alpha+\beta)$ 和 $\sin(\alpha+\beta)$ 的公式。</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(3)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(5)">下一節 →</button>
+  </div>
+</div>
+
+<!-- SECTION 5: 加法公式 -->
+<div class="section" id="sec5">
+  <h1>1.5 加法公式的幾何推導</h1>
+  <p class="lead">$\sin(\alpha+\beta) = \sin\alpha\cos\beta + \cos\alpha\sin\beta$——這個公式有一個優美的幾何證明。</p>
+
+  <div class="demo-area">
+    <h3>互動：加法公式視覺化</h3>
+    <div class="canvas-wrap">
+      <canvas id="addCanvas" width="340" height="340"></canvas>
+      <div class="canvas-info">
+        <div class="slider-group">
+          <label>角度 α <span id="alphaLabel">30°</span></label>
+          <input type="range" id="alphaSlider" min="0" max="89" value="30" oninput="updateAdd()">
+        </div>
+        <div class="slider-group">
+          <label>角度 β <span id="betaLabel">40°</span></label>
+          <input type="range" id="betaSlider" min="0" max="89" value="40" oninput="updateAdd()">
+        </div>
+        <div class="value-display"><div class="label">sin(α + β)</div><div class="val" id="sinAddVal">0.985</div></div>
+        <div class="value-display"><div class="label">sin α cos β + cos α sin β</div><div class="val" id="sinAddCalc">0.985</div></div>
+        <div class="value-display"><div class="label">cos(α + β)</div><div class="val" id="cosAddVal">0.174</div></div>
+        <div class="value-display"><div class="label">cos α cos β − sin α sin β</div><div class="val" id="cosAddCalc">0.174</div></div>
+        <p class="hint">紫色弧 = α，青色弧 = β，總弧 = α+β<br>觀察各色線段如何拼成 sin(α+β)</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>複數推導：為什麼可以用複數？</h2>
+
+  <div class="insight">
+    <div class="icon">💡</div>
+    <p><strong>核心洞見</strong>：複數乘法 = 旋轉合成。兩個角度的旋轉合成，角度直接相加。加法公式因此成為複數乘法的自然推論——不需要任何幾何輔助線技巧。</p>
+  </div>
+
+  <h3>步驟一：複數與單位圓的橋樑</h3>
+  <div class="card">
+    <p>在複數平面（實軸 = x 軸，虛軸 = y 軸）中，單位圓上的點 $(\cos\theta,\, \sin\theta)$ 對應複數：</p>
+    <div class="math-block">$$z = \cos\theta + i\sin\theta, \quad |z| = \sqrt{\cos^2\theta+\sin^2\theta} = 1$$</div>
+    <p>反過來，<strong>每個模為 1 的複數唯一對應一個角度 $\theta$</strong>。三件事等價：</p>
+    <div class="math-block">$$\text{模為 1 的複數} \;\longleftrightarrow\; \text{單位圓上的點} \;\longleftrightarrow\; \text{一個旋轉角度}$$</div>
+  </div>
+
+  <h3>步驟二：複數乘法 = 旋轉（最關鍵的一步）</h3>
+  <div class="card accent">
+    <p>複數乘法有個優美的幾何規則：<strong>模相乘、輻角相加</strong>。</p>
+    <div class="math-block">$$|z_1 z_2| = |z_1| \cdot |z_2|, \qquad \arg(z_1 z_2) = \arg(z_1) + \arg(z_2)$$</div>
+    <p>現在設 $z_1 = \cos\alpha + i\sin\alpha$（模 1，角 $\alpha$），$z_2 = \cos\beta + i\sin\beta$（模 1，角 $\beta$）：</p>
+    <ul style="margin:0.5rem 0 0.5rem 1.2rem;line-height:2;">
+      <li>$z_1 z_2$ 的模 $= 1 \times 1 = 1$（仍在單位圓上）</li>
+      <li>$z_1 z_2$ 的角 $= \alpha + \beta$</li>
+    </ul>
+    <div class="math-block">$$\therefore\; z_1 z_2 = \cos(\alpha+\beta) + i\sin(\alpha+\beta)$$</div>
+    <p class="hint">這是<em>純幾何</em>的結論——旋轉 $\alpha$ 再旋轉 $\beta$，等於旋轉 $\alpha+\beta$。加法公式已經呼之欲出了。</p>
+  </div>
+
+  <h3>互動圖解：三個單位複數的旋轉關係</h3>
+  <div class="card" style="display:flex;flex-wrap:wrap;gap:1.2rem;align-items:flex-start;">
+    <div style="flex:0 0 auto;">
+      <canvas id="cxRotCanvas" width="270" height="270" style="border-radius:8px;background:#0f172a;display:block;"></canvas>
+      <p class="hint" style="text-align:center;margin-top:0.4rem;">↑ 與上方 α、β 滑桿同步</p>
+    </div>
+    <div style="flex:1;min-width:180px;line-height:2;">
+      <p><strong style="color:#a78bfa;">z₁</strong>（紫）= cos α + i sin α，角度 = α</p>
+      <p><strong style="color:#f87171;">z₂</strong>（紅）= cos β + i sin β，角度 = β</p>
+      <p><strong style="color:#4ade80;">z₁z₂</strong>（綠）= cos(α+β) + i sin(α+β)，角度 = α+β</p>
+      <p style="margin-top:0.8rem;">三點都在單位圓上。<br>乘積的輻角恰好是兩角之和。<br>這不是巧合——這就是旋轉的合成！</p>
+      <p style="color:#fbbf24;margin-top:0.6rem;">🔑 <em>加法公式的本質：旋轉合成 = 角度相加</em></p>
+    </div>
+  </div>
+
+  <h3>步驟三：代數展開作為代數確認</h3>
+  <div class="card accent">
+    <p>幾何上我們已知 $z_1 z_2 = \cos(\alpha+\beta)+i\sin(\alpha+\beta)$。把左邊代數展開，比較兩邊即得：</p>
+    <div class="derivation">
+      <div class="step"><span class="label">展開</span>$(\cos\alpha + i\sin\alpha)(\cos\beta + i\sin\beta)$</div>
+      <div class="step"><span class="label">$i^2=-1$</span>$= (\cos\alpha\cos\beta - \sin\alpha\sin\beta) + i(\sin\alpha\cos\beta + \cos\alpha\sin\beta)$</div>
+      <div class="step"><span class="label">比較實部</span>$\cos(\alpha+\beta) = \cos\alpha\cos\beta - \sin\alpha\sin\beta \;\checkmark$</div>
+      <div class="step"><span class="label">比較虛部</span>$\sin(\alpha+\beta) = \sin\alpha\cos\beta + \cos\alpha\sin\beta \;\checkmark$</div>
+    </div>
+  </div>
+
+  <div class="card cyan">
+    <p><strong>總結</strong>：複數能推導加法公式，根本原因是複數乘法在幾何上等於旋轉合成，輻角相加。把「旋轉 α 後再旋轉 β = 旋轉 α+β」這個幾何事實，用代數語言寫下來，就得到了三角恆等式。這是複數最深刻的幾何意義之一，也是後續歐拉公式 $e^{i\theta}$ 的核心精神。</p>
+  </div>
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(3)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(7)">下一節 →</button>
+  </div>
+</div>
+
+<!-- SECTION 6: 自然常數 e -->
+<div class="section" id="sec6">
+  <h1>1.6 自然常數 <em>e</em>：最自然的底數</h1>
+  <p class="lead">$e \approx 2.71828\ldots$ 看起來很隨機，其實它是宇宙中「成長」這件事最自然的刻度。</p>
+
+  <div class="insight">
+    <div class="icon">🌱</div>
+    <p>$e$ 有一個獨一無二的性質：以 $e$ 為底的指數函數，<strong>導數等於自身</strong>。<br>
+    換句話說，$e^x$ 的成長速度，永遠等於它目前的大小。這是「自然成長」的數學定義。</p>
+  </div>
+
+  <h2>從複利出發：e 的直觀來源</h2>
+  <div class="card">
+    <p>假設銀行年利率 100%。若每年複利一次，1 元變成：</p>
+    <div class="math-block">$$\left(1 + 1\right)^1 = 2$$</div>
+    <p>若每半年複利一次（每次 50%）：</p>
+    <div class="math-block">$$\left(1 + \frac{1}{2}\right)^2 = 2.25$$</div>
+    <p>若每月、每天、每秒……複利頻率越高，極限是：</p>
+    <div class="math-block">$$e = \lim_{n \to \infty}\left(1 + \frac{1}{n}\right)^n \approx 2.71828\ldots$$</div>
+    <p>$e$ 就是「瞬間連續複利」的極限——它衡量的是<em>連續成長</em>的本質。</p>
+  </div>
+
+  <h2>三種等價定義</h2>
+  <div class="card accent">
+    <div class="derivation">
+      <div class="step"><span class="label">極限定義</span>$e = \displaystyle\lim_{n\to\infty}\left(1+\dfrac{1}{n}\right)^n$</div>
+      <div class="step"><span class="label">導數定義</span>$e$ 是唯一使 $\dfrac{d}{dx}e^x = e^x$ 成立的底數（斜率等於高度）</div>
+      <div class="step"><span class="label">級數定義</span>$e = 1 + 1 + \dfrac{1}{2!} + \dfrac{1}{3!} + \dfrac{1}{4!} + \cdots = \displaystyle\sum_{n=0}^{\infty}\dfrac{1}{n!}$</div>
+    </div>
+    <p class="hint">三種定義互相等價，從不同角度揭示 $e$ 的本質。</p>
+  </div>
+
+  <h2>互動：斜率 = 函數值</h2>
+  <p>$e^x$ 最神奇的性質：在任何一點，切線的斜率恰好等於該點的函數值。拖動滑桿感受這個性質：</p>
+  <div class="card" style="display:flex;flex-wrap:wrap;gap:1.2rem;align-items:flex-start;">
+    <canvas id="eCanvas" width="320" height="260" style="border-radius:8px;background:#0f172a;display:block;flex:0 0 auto;"></canvas>
+    <div style="flex:1;min-width:160px;">
+      <label>$x$ 的位置：<span id="eXLabel">0.00</span></label>
+      <input type="range" id="eXSlider" min="-200" max="200" value="0" oninput="updateE()">
+      <div class="value-display" style="margin-top:1rem;"><div class="label">$e^x$（函數值）</div><div class="val" id="eValDisplay">1.000</div></div>
+      <div class="value-display"><div class="label">$(e^x)'$（斜率）</div><div class="val" id="eSlopeDisplay">1.000</div></div>
+      <div class="value-display"><div class="label">差值</div><div class="val" id="eDiffDisplay">0.000</div></div>
+      <p class="hint" style="margin-top:0.8rem;">函數值與斜率永遠相等！這正是 $e$ 被選為自然底數的原因。</p>
+    </div>
+  </div>
+
+  <h2>泰勒展開：e^x 的無窮精確表示</h2>
+  <div class="card">
+    <p>$e^x$ 可以用無窮多項式精確表示：</p>
+    <div class="math-block">$$e^x = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \frac{x^4}{4!} + \cdots = \sum_{n=0}^{\infty}\frac{x^n}{n!}$$</div>
+    <p>驗證：把這個級數逐項微分，每項 $\dfrac{x^n}{n!}$ 的導數是 $\dfrac{x^{n-1}}{(n-1)!}$，整個級數不變。這再次確認 $\dfrac{d}{dx}e^x = e^x$。</p>
+  </div>
+
+  <h2>互動：泰勒多項式逼近</h2>
+  <p>增加展開的項數，多項式越來越逼近 $e^x$ 曲線：</p>
+  <div class="card" style="display:flex;flex-wrap:wrap;gap:1.2rem;align-items:flex-start;">
+    <canvas id="eTaylorCanvas" width="320" height="260" style="border-radius:8px;background:#0f172a;display:block;flex:0 0 auto;"></canvas>
+    <div style="flex:1;min-width:160px;">
+      <label>展開到第 <span id="eTaylorNLabel">3</span> 項</label>
+      <input type="range" id="eTaylorSlider" min="1" max="8" value="3" oninput="updateETaylor()">
+      <div id="eTaylorFormula" style="margin-top:1rem;font-size:0.85rem;color:#94a3b8;line-height:1.8;"></div>
+      <p class="hint" style="margin-top:0.8rem;">橘色 = $e^x$ 真實曲線<br>青色 = 泰勒多項式逼近</p>
+    </div>
+  </div>
+
+  <h2>幾何意義：唯一「自相似」的增長</h2>
+  <div class="card cyan">
+    <p>$e^x$ 是唯一具有<strong>自我相似增長</strong>的函數：無論你移動到曲線上的哪個點，局部形狀看起來都一模一樣（因為 $f' = f$，形狀由自身決定）。</p>
+    <p>這使 $e^x$ 成為描述<strong>放射性衰變、人口增長、電容充放電、疾病傳播</strong>等一切自然過程的標準語言。</p>
+  </div>
+
+  <h2>預告：代入虛數會發生什麼？</h2>
+  <div class="card accent">
+    <p>到目前為止，我們只把實數代入 $e^x$。下一節我們要把<strong>虛數</strong> $i\theta$ 代入泰勒展開：</p>
+    <div class="math-block">$$e^{i\theta} = 1 + i\theta + \frac{(i\theta)^2}{2!} + \frac{(i\theta)^3}{3!} + \cdots$$</div>
+    <p>利用 $i^2=-1$ 整理後，你將看到實部和虛部恰好等於 $\cos\theta$ 和 $\sin\theta$——這就是歐拉公式的誕生。</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(5)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(7)">下一節 →</button>
+  </div>
+</div>
+
+<!-- SECTION 7: 歐拉公式 -->
+<div class="section" id="sec7">
+  <h1>1.7 歐拉公式：數學最美的等式</h1>
+  <p class="lead">$e^{i\theta} = \cos\theta + i\sin\theta$——這個公式把指數、複數、三角函數統一在一起。</p>
+
+  <div class="insight">
+    <div class="icon">✨</div>
+    <p>當 $\theta = \pi$ 時，得到 $e^{i\pi} = \cos\pi + i\sin\pi = -1 + 0 = -1$，即 <strong>$e^{i\pi} + 1 = 0$</strong>。<br>這個等式把五個數學最重要的常數（$e, i, \pi, 1, 0$）用最簡潔的方式聯繫起來。</p>
+  </div>
+
+  <h2>推導：從泰勒展開</h2>
+  <p>三個函數的泰勒級數（在 $x=0$ 展開）：</p>
+  <div class="math-block">
+$$e^x = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \frac{x^4}{4!} + \frac{x^5}{5!} + \cdots$$
+$$\cos x = 1 - \frac{x^2}{2!} + \frac{x^4}{4!} - \frac{x^6}{6!} + \cdots$$
+$$\sin x = x - \frac{x^3}{3!} + \frac{x^5}{5!} - \frac{x^7}{7!} + \cdots$$
+  </div>
+  <p>代入 $x = i\theta$，利用 $i^2 = -1, i^3 = -i, i^4 = 1$ 的循環：</p>
+  <div class="derivation">
+    <div class="step"><span class="label">代入</span>$e^{i\theta} = 1 + i\theta + \frac{(i\theta)^2}{2!} + \frac{(i\theta)^3}{3!} + \cdots$</div>
+    <div class="step"><span class="label">化簡</span>$= 1 + i\theta - \frac{\theta^2}{2!} - i\frac{\theta^3}{3!} + \frac{\theta^4}{4!} + \cdots$</div>
+    <div class="step"><span class="label">整理</span>$= \underbrace{\left(1 - \frac{\theta^2}{2!} + \frac{\theta^4}{4!} - \cdots\right)}_{\cos\theta} + i\underbrace{\left(\theta - \frac{\theta^3}{3!} + \frac{\theta^5}{5!} - \cdots\right)}_{\sin\theta}$</div>
+  </div>
+
+  <h2>幾何意義：在複數平面上旋轉</h2>
+
+  <div class="card">
+    <p>先確認 $e^{i\theta}$ 落在單位圓上。由歐拉公式：</p>
+    <div class="math-block">$$|e^{i\theta}| = |\cos\theta + i\sin\theta| = \sqrt{\cos^2\theta+\sin^2\theta} = 1$$</div>
+    <p>所以 $e^{i\theta}$ 是一個<strong>模為 1 的複數</strong>，永遠在單位圓上，且輻角恰好是 $\theta$。</p>
+    <p>由第 1.4 節：乘以模為 1 的複數 = 純旋轉。因此乘以 $e^{i\theta}$，就是<strong>把任何複數逆時針旋轉角度 $\theta$</strong>。</p>
+  </div>
+
+  <h2>互動：e^{iθ} 在單位圓上的軌跡</h2>
+  <div class="card" style="display:flex;flex-wrap:wrap;gap:1.2rem;align-items:flex-start;">
+    <canvas id="eulerUnitCanvas" width="300" height="300" style="border-radius:8px;background:#0f172a;display:block;flex:0 0 auto;"></canvas>
+    <div style="flex:1;min-width:160px;">
+      <label>角度 $\theta$：<span id="eulerThLabel">0°</span></label>
+      <input type="range" id="eulerThSlider" min="0" max="628" value="0" oninput="updateEuler()">
+      <div class="value-display" style="margin-top:0.8rem;"><div class="label">$\cos\theta$（實部）</div><div class="val" id="eulerCosVal">1.000</div></div>
+      <div class="value-display"><div class="label">$\sin\theta$（虛部）</div><div class="val" id="eulerSinVal">0.000</div></div>
+      <div style="margin-top:1rem;font-size:0.85rem;line-height:2;">
+        <p><span style="color:#4ade80;">●</span> $e^{i\theta}$（在單位圓上移動）</p>
+        <p><span style="color:#60a5fa;">- -</span> 實部投影 $\cos\theta$</p>
+        <p><span style="color:#f87171;">- -</span> 虛部投影 $\sin\theta$</p>
+      </div>
+      <p class="hint">特殊值：$\theta=0 \Rightarrow 1$，$\theta=\pi/2 \Rightarrow i$，<br>$\theta=\pi \Rightarrow -1$，$\theta=3\pi/2 \Rightarrow -i$</p>
+    </div>
+  </div>
+
+  <h2>互動：乘以 e^{iθ} = 旋轉任意點</h2>
+  <div class="card" style="display:flex;flex-wrap:wrap;gap:1.2rem;align-items:flex-start;">
+    <canvas id="eulerRotCanvas" width="300" height="300" style="border-radius:8px;background:#0f172a;display:block;flex:0 0 auto;"></canvas>
+    <div style="flex:1;min-width:160px;">
+      <p style="font-size:0.9rem;line-height:2;">
+        <span style="color:#fbbf24;">●</span> 黃點 = 任意複數 $z$（拖動角度滑桿改變 $\theta$，$z$ 固定）<br>
+        <span style="color:#a78bfa;">●</span> 紫點 = $e^{i\theta}$（在單位圓上）<br>
+        <span style="color:#4ade80;">●</span> 綠點 = $e^{i\theta} \cdot z$（$z$ 旋轉後）
+      </p>
+      <p style="margin-top:0.5rem;">注意綠點與黃點：<br>・距離原點相同（模不變）<br>・角度差恰好是 $\theta$</p>
+      <p class="hint">改變 θ，感受旋轉操作的本質。</p>
+    </div>
+  </div>
+
+  <div class="card accent">
+    <h3>四個特殊值一覽</h3>
+    <div class="derivation">
+      <div class="step"><span class="label">$\theta=0$</span>$e^{i\cdot 0} = 1$（不旋轉，在正實軸）</div>
+      <div class="step"><span class="label">$\theta=\pi/2$</span>$e^{i\pi/2} = i$（旋轉 90°，到虛軸正方向）</div>
+      <div class="step"><span class="label">$\theta=\pi$</span>$e^{i\pi} = -1$（旋轉 180°，到負實軸）$\;\ \Rightarrow e^{i\pi}+1=0$</div>
+      <div class="step"><span class="label">$\theta=2\pi$</span>$e^{i2\pi} = 1$（旋轉整圈，回到原點）</div>
+    </div>
+  </div>
+
+  <h2>連結到第三章：複數乘法 ↔ 旋轉矩陣</h2>
+  <div class="card cyan">
+    <p>乘以 $e^{i\theta}$ 把任意複數 $(x+iy)$ 旋轉角度 $\theta$。用座標計算：</p>
+    <div class="derivation">
+      <div class="step"><span class="label">展開</span>$e^{i\theta}\cdot(x+iy) = (\cos\theta+i\sin\theta)(x+iy)$</div>
+      <div class="step"><span class="label">整理</span>$= (x\cos\theta - y\sin\theta) + i(x\sin\theta + y\cos\theta)$</div>
+      <div class="step"><span class="label">矩陣形式</span>$\begin{pmatrix}x'\\y'\end{pmatrix} = \begin{pmatrix}\cos\theta & -\sin\theta \\ \sin\theta & \cos\theta\end{pmatrix}\begin{pmatrix}x\\y\end{pmatrix}$</div>
+    </div>
+    <p><strong>複數乘法 = 矩陣乘法</strong>——這不是巧合，兩者描述的是同一個旋轉操作。第 3.2 節將從矩陣的角度再次推導這個結果並深入分析其性質。</p>
+  </div>
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(6)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(8)">下一節 →</button>
+  </div>
+</div>
+
+<!-- SECTION 8: 第一章總整理 -->
+<div class="section" id="sec8">
+  <h1>1.8 第一章總整理：一切從旋轉開始</h1>
+  <p class="lead">六個概念、一條脈絡。用動畫把第一章所有核心思想串成一個故事。</p>
+
+  <div class="insight">
+    <div class="icon">🎬</div>
+    <p>第一章的主角從未改變——它一直是<strong>旋轉</strong>。<br>弧度是旋轉的語言，三角函數是旋轉的座標，複數是旋轉的代數，歐拉公式是旋轉最美的表達。</p>
+  </div>
+
+  <h2>知識脈絡動畫</h2>
+  <div class="flow-anim-wrap" style="overflow-x:auto;">
+    <div class="flow-anim" id="flowAnim" style="
+      display:grid;grid-template-columns:repeat(7,1fr);gap:0;
+      min-width:640px;max-width:900px;margin:0 auto;
+      align-items:center;justify-items:center;padding:1rem 0;">
+      <div class="flow-node" style="animation-delay:0s"><span class="flow-icon">🔢</span><strong>弧度制</strong><small>角度的自然語言</small></div>
+      <div class="flow-arrow" style="animation-delay:0.4s">→</div>
+      <div class="flow-node" style="animation-delay:0.6s"><span class="flow-icon">⭕</span><strong>單位圓</strong><small>sin/cos 的定義</small></div>
+      <div class="flow-arrow" style="animation-delay:1.0s">→</div>
+      <div class="flow-node" style="animation-delay:1.2s"><span class="flow-icon">📐</span><strong>恆等式</strong><small>對稱的幾何</small></div>
+      <div class="flow-arrow" style="animation-delay:1.6s">→</div>
+      <div class="flow-node" style="animation-delay:1.8s"><span class="flow-icon">➕</span><strong>加法公式</strong><small>旋轉的合成</small></div>
+
+      <div style="grid-column:1/8;height:0.5rem;"></div>
+
+      <div class="flow-node" style="animation-delay:3.6s;grid-column:7"><span class="flow-icon">✨</span><strong>歐拉公式</strong><small>e<sup>iθ</sup>=cosθ+i sinθ</small></div>
+      <div class="flow-arrow" style="animation-delay:3.2s;grid-column:6;transform:scaleX(-1)">→</div>
+      <div class="flow-node" style="animation-delay:2.8s;grid-column:5"><span class="flow-icon">🌱</span><strong>自然常數 e</strong><small>連續成長的刻度</small></div>
+      <div class="flow-arrow" style="animation-delay:2.4s;grid-column:4;transform:scaleX(-1)">→</div>
+      <div class="flow-node" style="animation-delay:2.2s;grid-column:3"><span class="flow-icon">🌐</span><strong>複數平面</strong><small>數字有了方向</small></div>
+    </div>
+  </div>
+
+  <h2>動畫：第一章的統一視角</h2>
+  <p style="color:#94a3b8;font-size:0.9rem;">動畫自動播放，依序展示四個主題。可暫停並手動切換。</p>
+  <div class="card" style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start;">
+    <div style="flex:0 0 auto;">
+      <canvas id="summaryCanvas" width="360" height="340" style="border-radius:8px;background:#0f172a;display:block;"></canvas>
+      <div style="display:flex;gap:0.5rem;margin-top:0.7rem;flex-wrap:wrap;">
+        <button class="btn btn-secondary" style="padding:4px 10px;font-size:0.8rem;" onclick="prevSummaryPhase()">◀</button>
+        <button class="btn btn-primary" style="padding:4px 14px;font-size:0.8rem;" id="summaryPlayBtn" onclick="toggleSummaryAnim()">⏸ 暫停</button>
+        <button class="btn btn-secondary" style="padding:4px 10px;font-size:0.8rem;" onclick="nextSummaryPhase()">▶</button>
+      </div>
+    </div>
+    <div style="flex:1;min-width:180px;">
+      <div id="summaryPhaseInfo" style="margin-bottom:1rem;">
+        <div style="display:flex;gap:0.4rem;margin-bottom:0.8rem;" id="summaryDots"></div>
+        <div id="summaryPhaseTitle" style="font-weight:bold;font-size:1rem;color:#4ade80;margin-bottom:0.4rem;"></div>
+        <div id="summaryPhaseDesc" style="font-size:0.9rem;color:#94a3b8;line-height:1.7;"></div>
+      </div>
+      <div class="hint">每個主題展示約 5 秒，自動循環。<br>點擊 ◀ ▶ 手動切換。</div>
+    </div>
+  </div>
+
+  <h2>第一章核心公式一覽</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:0.5rem;">
+    <div class="formula-card fade-card" style="animation-delay:0.1s">
+      <div class="formula-tag">弧度</div>
+      <div class="math-block" style="margin:0;">$$1\text{ rad} = \frac{180°}{\pi},\quad s = r\theta$$</div>
+      <small>弧長 = 半徑 × 弧度，導數公式因此無多餘係數。</small>
+    </div>
+    <div class="formula-card fade-card" style="animation-delay:0.3s">
+      <div class="formula-tag">畢氏定理</div>
+      <div class="math-block" style="margin:0;">$$\sin^2\theta + \cos^2\theta = 1$$</div>
+      <small>單位圓的定義直接給出最基本的恆等式。</small>
+    </div>
+    <div class="formula-card fade-card" style="animation-delay:0.5s">
+      <div class="formula-tag">加法公式</div>
+      <div class="math-block" style="margin:0;">$$\cos(\alpha{+}\beta)=\cos\alpha\cos\beta-\sin\alpha\sin\beta$$</div>
+      <small>旋轉合成 = 複數乘法 = 矩陣乘法（三種等價視角）。</small>
+    </div>
+    <div class="formula-card fade-card" style="animation-delay:0.7s">
+      <div class="formula-tag">複數極式</div>
+      <div class="math-block" style="margin:0;">$$z = r(\cos\theta + i\sin\theta),\;\; |z_1 z_2| = r_1 r_2$$</div>
+      <small>乘法 = 模相乘 · 輻角相加，幾何上是旋轉與縮放。</small>
+    </div>
+    <div class="formula-card fade-card" style="animation-delay:0.9s">
+      <div class="formula-tag">e 的本質</div>
+      <div class="math-block" style="margin:0;">$$e^x = \sum_{n=0}^{\infty}\frac{x^n}{n!},\;\;\frac{d}{dx}e^x = e^x$$</div>
+      <small>唯一「斜率 = 自身」的指數函數，連續成長的基準。</small>
+    </div>
+    <div class="formula-card fade-card" style="animation-delay:1.1s">
+      <div class="formula-tag">歐拉公式</div>
+      <div class="math-block" style="margin:0;">$$e^{i\theta} = \cos\theta + i\sin\theta \;\Rightarrow\; e^{i\pi}+1=0$$</div>
+      <small>指數 · 複數 · 三角函數的大統一；乘以 e^(iθ) = 旋轉 θ。</small>
+    </div>
+  </div>
+
+  <div class="card cyan" style="margin-top:1.5rem;">
+    <p>🔮 <strong>預告第二章</strong>：向量是「帶方向的量」，而描述兩向量夾角的工具正是 $\cos\theta$——三角函數再次登場。第三章的旋轉矩陣，則是歐拉公式在矩陣語言中的翻譯。第一章學的每一個概念，都將在後面的章節找到它的位置。</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(7)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(9)">進入第二章 →</button>
+  </div>
+</div>
+
+<!-- SECTION 9: 向量幾何意義 -->
+<div class="section" id="sec9">
+  <h1>2.1 向量的幾何意義</h1>
+  <p class="lead">向量是「有方向的量」。理解它的幾何本質，是理解線性代數的鑰匙。</p>
+
+  <div class="insight">
+    <div class="icon">🔀</div>
+    <p>向量有兩種觀點：<br>
+    <strong>幾何觀</strong>：帶箭頭的線段，表示「位移」——從哪裡到哪裡<br>
+    <strong>代數觀</strong>：一組有序的數字 $\mathbf{v} = (v_1, v_2, \ldots, v_n)$<br>
+    最重要的是：<em>這兩種觀點是等價的</em>，而且可以互相轉換。</p>
+  </div>
+
+  <h2>向量運算的幾何意義</h2>
+  <div class="demo-area">
+    <h3>互動：向量加法</h3>
+    <div class="canvas-wrap">
+      <canvas id="vecCanvas" width="340" height="340"></canvas>
+      <div class="canvas-info">
+        <div class="slider-group">
+          <label>向量 a 的角度 <span id="aAngLabel">30°</span></label>
+          <input type="range" id="aAng" min="0" max="360" value="30" oninput="updateVec()">
+        </div>
+        <div class="slider-group">
+          <label>向量 a 的大小 <span id="aMagLabel">2.0</span></label>
+          <input type="range" id="aMag" min="10" max="100" value="60" oninput="updateVec()">
+        </div>
+        <div class="slider-group">
+          <label>向量 b 的角度 <span id="bAngLabel">110°</span></label>
+          <input type="range" id="bAng" min="0" max="360" value="110" oninput="updateVec()">
+        </div>
+        <div class="slider-group">
+          <label>向量 b 的大小 <span id="bMagLabel">1.5</span></label>
+          <input type="range" id="bMag" min="10" max="100" value="45" oninput="updateVec()">
+        </div>
+        <div class="value-display"><div class="label">|a + b|（合向量長度）</div><div class="val" id="sumMag">—</div></div>
+        <p class="hint">🔵 a（藍）+ 🔴 b（紅）= 🟢 a+b（綠）<br>平行四邊形法則：以 a 和 b 為鄰邊作平行四邊形，對角線就是 a+b</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card accent">
+    <h3>標量乘法的幾何意義</h3>
+    <p>$k\mathbf{v}$：<br>- $k > 1$：同方向，拉長<br>- $0 < k < 1$：同方向，縮短<br>- $k = -1$：方向反轉（旋轉 180°）<br>- $k < 0$：方向反轉並縮放</p>
+  </div>
+
+  <h2>線性組合：向量的核心語言</h2>
+  <div class="math-block">$$\mathbf{w} = c_1\mathbf{v}_1 + c_2\mathbf{v}_2 + \cdots + c_n\mathbf{v}_n$$</div>
+  <p>所有可能的線性組合構成的集合，叫做這些向量的<strong>展開空間（span）</strong>。這是線性代數最核心的概念之一。</p>
+
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(7)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(10)">下一節 →</button>
+  </div>
+</div>
+
+<!-- SECTION 10: 內積 -->
+<div class="section" id="sec10">
+  <h1>2.2 內積：cosθ 回來了！</h1>
+  <p class="lead">內積（dot product）是三角函數與向量之間最直接的橋梁。</p>
+  <h2>定義與幾何意義</h2>
+  <div class="math-block">$$\mathbf{a} \cdot \mathbf{b} = |\mathbf{a}||\mathbf{b}|\cos\theta$$</div>
+  <div class="insight">
+    <div class="icon">📐</div>
+    <p><strong>幾何意義</strong>：內積等於 $|\mathbf{a}|$ 乘以「$\mathbf{b}$ 在 $\mathbf{a}$ 方向上的投影長度」。<br>
+    等價地，也等於「$\mathbf{a}$ 在 $\mathbf{b}$ 方向的投影長度」乘以 $|\mathbf{b}|$。</p>
+  </div>
+
+  <div class="demo-area">
+    <h3>互動：內積與投影</h3>
+    <div class="canvas-wrap">
+      <canvas id="dotCanvas" width="340" height="340"></canvas>
+      <div class="canvas-info">
+        <div class="slider-group">
+          <label>向量 b 的角度 <span id="dotAngLabel">50°</span></label>
+          <input type="range" id="dotAng" min="-90" max="90" value="50" oninput="updateDot()">
+        </div>
+        <div class="value-display"><div class="label">夾角 θ</div><div class="val" id="dotTheta">50°</div></div>
+        <div class="value-display"><div class="label">a · b = |a||b|cosθ</div><div class="val" id="dotVal">—</div></div>
+        <div class="value-display"><div class="label">b 在 a 方向的投影</div><div class="val" id="projVal">—</div></div>
+        <p class="hint">🔵 a（固定，向右）<br>🔴 b（可旋轉）<br>🟡 投影（b在a方向的分量）<br><br>注意：θ = 90° 時，內積 = 0（垂直！）</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>代數計算公式</h2>
+  <div class="math-block">$$\mathbf{a} \cdot \mathbf{b} = a_1 b_1 + a_2 b_2 \quad (\text{二維}) \qquad \mathbf{a} \cdot \mathbf{b} = \sum_{k=1}^n a_k b_k \quad (n\text{維})$$</div>
+
+  <div class="card accent">
+    <h3>兩個公式等價的推導</h3>
+    <p>由代數公式推出幾何公式（或反過來），需要用到<strong>余弦定理</strong>：</p>
+    <div class="derivation">
+      <div class="step"><span class="label">餘弦定理</span>$|\mathbf{b}-\mathbf{a}|^2 = |\mathbf{a}|^2 + |\mathbf{b}|^2 - 2|\mathbf{a}||\mathbf{b}|\cos\theta$</div>
+      <div class="step"><span class="label">展開左邊</span>$(b_1-a_1)^2+(b_2-a_2)^2 = |\mathbf{a}|^2+|\mathbf{b}|^2 - 2(a_1b_1+a_2b_2)$</div>
+      <div class="step"><span class="label">比較</span>$a_1b_1+a_2b_2 = |\mathbf{a}||\mathbf{b}|\cos\theta$</div>
+    </div>
+  </div>
+
+  <h2>內積的應用</h2>
+  <div class="card cyan">
+    <h3>求夾角</h3>
+    <div class="math-block">$$\cos\theta = \frac{\mathbf{a}\cdot\mathbf{b}}{|\mathbf{a}||\mathbf{b}|}$$</div>
+  </div>
+  <div class="card amber">
+    <h3>投影公式</h3>
+    <p>$\mathbf{a}$ 在 $\mathbf{b}$ 方向的投影向量：</p>
+    <div class="math-block">$$\text{proj}_{\mathbf{b}}\mathbf{a} = \frac{\mathbf{a}\cdot\mathbf{b}}{|\mathbf{b}|^2}\mathbf{b}$$</div>
+    <p>這個公式在最小二乘法、主成分分析（PCA）中至關重要。</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(9)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(11)">下一節 →</button>
+  </div>
+</div>
+
+<!-- SECTION 11: 外積 -->
+<div class="section" id="sec11">
+  <h1>2.3 外積：sinθ 回來了！</h1>
+  <p class="lead">如果內積用 cosθ 描述兩向量的「平行程度」，外積就用 sinθ 描述兩向量的「垂直程度」。</p>
+  <h2>外積的幾何意義</h2>
+  <div class="math-block">$$|\mathbf{a} \times \mathbf{b}| = |\mathbf{a}||\mathbf{b}|\sin\theta$$</div>
+  <div class="insight">
+    <div class="icon">📏</div>
+    <p><strong>面積！</strong> $|\mathbf{a} \times \mathbf{b}|$ 等於以 $\mathbf{a}$、$\mathbf{b}$ 為鄰邊的平行四邊形的面積。<br>
+    為什麼？平行四邊形面積 = 底 × 高 = $|\mathbf{a}| \times (|\mathbf{b}|\sin\theta)$。</p>
+  </div>
+
+  <h2>三維外積的公式</h2>
+  <div class="math-block">$$\mathbf{a} \times \mathbf{b} = \begin{vmatrix}\mathbf{i} & \mathbf{j} & \mathbf{k} \\ a_1 & a_2 & a_3 \\ b_1 & b_2 & b_3\end{vmatrix}$$</div>
+
+  <div class="card accent">
+    <h3>方向：右手定則</h3>
+    <p>外積 $\mathbf{a}\times\mathbf{b}$ 的方向<strong>垂直於</strong> $\mathbf{a}$ 和 $\mathbf{b}$ 所在的平面。<br>
+    右手食指指向 $\mathbf{a}$，彎向 $\mathbf{b}$，大拇指指的方向就是 $\mathbf{a}\times\mathbf{b}$。</p>
+  </div>
+
+  <h2>重要性質</h2>
+  <table>
+    <tr><th>性質</th><th>公式</th><th>幾何意義</th></tr>
+    <tr><td>反交換律</td><td>$\mathbf{a}\times\mathbf{b} = -\mathbf{b}\times\mathbf{a}$</td><td>順序不同，方向相反</td></tr>
+    <tr><td>平行向量</td><td>$\mathbf{a}\times\mathbf{a} = \mathbf{0}$</td><td>面積為 0</td></tr>
+    <tr><td>分配律</td><td>$\mathbf{a}\times(\mathbf{b}+\mathbf{c}) = \mathbf{a}\times\mathbf{b}+\mathbf{a}\times\mathbf{c}$</td><td>線性</td></tr>
+  </table>
+
+  <div class="card cyan">
+    <h3>預告：行列式就是廣義面積</h3>
+    <p>外積的大小 $|\mathbf{a}\times\mathbf{b}|$ 在二維中等於 $2\times 2$ 矩陣的行列式：</p>
+    <div class="math-block">$$\det\begin{pmatrix}a_1 & a_2 \\ b_1 & b_2\end{pmatrix} = a_1 b_2 - a_2 b_1 = |\mathbf{a}||\mathbf{b}|\sin\theta$$</div>
+    <p>行列式 = 面積縮放比例。這是第三章的核心主題！</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(10)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(12)">進入第三章 →</button>
+  </div>
+</div>
+
+<!-- SECTION 12: 矩陣=變換 -->
+<div class="section" id="sec12">
+  <h1>3.1 矩陣 = 線性變換</h1>
+  <p class="lead">矩陣不只是一個數字表格。它是一個<strong>函數</strong>——把向量「變形」的機器。</p>
+
+  <div class="insight">
+    <div class="icon">⬛</div>
+    <p>一個 $2\times 2$ 矩陣 $A$ 把平面上每一個點 $\mathbf{v}$ 變換成 $A\mathbf{v}$。<br>
+    理解矩陣的關鍵：<strong>只需要看基底向量如何變換</strong>——因為線性性，其他所有向量自動確定。</p>
+  </div>
+
+  <div class="demo-area">
+    <h3>互動：矩陣變換探索器</h3>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">調整矩陣元素，看坐標格如何被「扭曲」</p>
+    <div class="canvas-wrap">
+      <canvas id="matCanvas" width="340" height="340"></canvas>
+      <div class="canvas-info">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:8px;">矩陣 $A = \begin{pmatrix}a & b \\ c & d\end{pmatrix}$</p>
+        <div class="slider-group"><label>a（第1列第1行）<span id="matA">1.0</span></label><input type="range" id="slA" min="-200" max="200" value="100" oninput="updateMat()"></div>
+        <div class="slider-group"><label>b（第1列第2行）<span id="matB">0.0</span></label><input type="range" id="slB" min="-200" max="200" value="0" oninput="updateMat()"></div>
+        <div class="slider-group"><label>c（第2列第1行）<span id="matC">0.0</span></label><input type="range" id="slC" min="-200" max="200" value="0" oninput="updateMat()"></div>
+        <div class="slider-group"><label>d（第2列第2行）<span id="matD">1.0</span></label><input type="range" id="slD" min="-200" max="200" value="100" oninput="updateMat()"></div>
+        <div class="value-display"><div class="label">行列式 det(A) = ad − bc</div><div class="val" id="detVal">1.00</div></div>
+        <p class="hint">灰色格 = 原始坐標格<br>彩色格 = 變換後<br>試試：a=0,b=-1,c=1,d=0（旋轉90°）<br>試試：a=2,b=0,c=0,d=0.5（縮放）</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>為什麼叫「線性」？</h2>
+  <div class="card accent">
+    <p>線性變換 $T$ 必須滿足：</p>
+    <div class="math-block">$$T(\mathbf{u} + \mathbf{v}) = T(\mathbf{u}) + T(\mathbf{v}) \qquad T(c\mathbf{v}) = cT(\mathbf{v})$$</div>
+    <p>幾何上：<strong>直線保持直線，原點不動，平行線保持平行</strong>。<br>
+    注意：旋轉 ✓、縮放 ✓、剪切 ✓ 都是線性的；平移 ✗ 不是線性的。</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(11)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(13)">下一節 →</button>
+  </div>
+</div>
+
+<!-- SECTION 13: 旋轉矩陣 -->
+<div class="section" id="sec13">
+  <h1>3.2 旋轉矩陣：三角函數的歸宿</h1>
+  <p class="lead">把一個向量旋轉角度 θ——這個操作對應的矩陣正是三角函數的完美組合。</p>
+  <h2>推導旋轉矩陣</h2>
+  <div class="card accent">
+    <h3>只需追蹤基底向量</h3>
+    <p>設旋轉角為 $\theta$（逆時針）。兩個基底向量的去向：</p>
+    <div class="derivation">
+      <div class="step"><span class="label">$\mathbf{e}_1=(1,0)$</span>旋轉後變成 $(\cos\theta, \sin\theta)$（在單位圓上！）</div>
+      <div class="step"><span class="label">$\mathbf{e}_2=(0,1)$</span>旋轉後變成 $(-\sin\theta, \cos\theta)$</div>
+      <div class="step"><span class="label">組合</span>把這兩個向量作為矩陣的列（columns）：</div>
+    </div>
+    <div class="math-block">$$R_\theta = \begin{pmatrix}\cos\theta & -\sin\theta \\ \sin\theta & \cos\theta\end{pmatrix}$$</div>
+  </div>
+
+  <div class="demo-area">
+    <h3>互動：旋轉矩陣</h3>
+    <div class="canvas-wrap">
+      <canvas id="rotCanvas" width="340" height="340"></canvas>
+      <div class="canvas-info">
+        <div class="slider-group">
+          <label>旋轉角 θ <span id="rotLabel">45°</span></label>
+          <input type="range" id="rotSlider" min="0" max="360" value="45" oninput="updateRot()">
+        </div>
+        <div class="value-display"><div class="label">矩陣元素</div>
+        <div style="font-family:monospace;font-size:13px;margin-top:6px;color:var(--accent2)">
+          [<span id="r11">0.707</span>, <span id="r12">-0.707</span>]<br>
+          [<span id="r21">0.707</span>, <span id="r22"> 0.707</span>]
+        </div></div>
+        <div class="value-display"><div class="label">det(R) = cos²θ + sin²θ</div><div class="val" id="rotDet" style="color:var(--success)">1.00</div></div>
+        <p class="hint">🔵 原始向量<br>🔴 旋轉後的向量<br><br>注意：行列式永遠 = 1<br>（旋轉不改變面積！）</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>旋轉矩陣的性質</h2>
+  <table>
+    <tr><th>性質</th><th>數學表達</th><th>幾何意義</th></tr>
+    <tr><td>行列式 = 1</td><td>$\det R_\theta = \cos^2\theta + \sin^2\theta = 1$</td><td>面積不變</td></tr>
+    <tr><td>正交矩陣</td><td>$R_\theta^T R_\theta = I$，即 $R_\theta^{-1} = R_\theta^T$</td><td>列向量互相垂直且單位長</td></tr>
+    <tr><td>逆 = 逆轉</td><td>$R_\theta^{-1} = R_{-\theta}$</td><td>旋轉 $-\theta$ 來復原</td></tr>
+    <tr><td>組合性</td><td>$R_\alpha R_\beta = R_{\alpha+\beta}$</td><td>兩次旋轉 = 角度相加</td></tr>
+  </table>
+
+  <div class="insight">
+    <div class="icon">🔗</div>
+    <p>$R_\alpha R_\beta = R_{\alpha+\beta}$ 的矩陣乘法，展開後正是<strong>三角函數加法公式</strong>！線性代數把加法公式內建進了矩陣乘法。</p>
+  </div>
+
+  <div class="card cyan">
+    <h3>🔁 回扣第 1.7 節的預告：複數乘法 = 矩陣乘法</h3>
+    <p>在歐拉公式那節，我們看到乘以 $e^{i\theta}$ 把複數 $(x+iy)$ 旋轉角度 $\theta$，展開後得到：</p>
+    <div class="math-block">$$e^{i\theta}\cdot(x+iy) \;\Rightarrow\; \begin{pmatrix}x'\\y'\end{pmatrix} = \underbrace{\begin{pmatrix}\cos\theta & -\sin\theta \\ \sin\theta & \cos\theta\end{pmatrix}}_{= R_\theta}\begin{pmatrix}x\\y\end{pmatrix}$$</div>
+    <p>現在你從矩陣的角度獨立推導出了同一個 $R_\theta$。兩條路殊途同歸：<br>
+    <strong>複數乘法（代數）↔ 旋轉矩陣（線性代數）↔ 三角函數（幾何）</strong><br>
+    這三個看似不同的數學語言，描述的是同一件事。</p>
+  </div>
+
+  <div class="card accent">
+    <h3>加法公式 ↔ 矩陣乘法 的顯式驗證</h3>
+    <div class="math-block">$$R_\alpha R_\beta = \begin{pmatrix}\cos\alpha\cos\beta-\sin\alpha\sin\beta & -(\sin\alpha\cos\beta+\cos\alpha\sin\beta) \\ \sin\alpha\cos\beta+\cos\alpha\sin\beta & \cos\alpha\cos\beta-\sin\alpha\sin\beta\end{pmatrix} = R_{\alpha+\beta}$$</div>
+    <p>矩陣乘法直接「推導」出了加法公式——三個數學分支已完全統一。</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(12)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(14)">下一節 →</button>
+  </div>
+</div>
+
+<!-- SECTION 14: 行列式 -->
+<div class="section" id="sec14">
+  <h1>3.3 行列式：面積的幾何意義</h1>
+  <p class="lead">行列式的本質是：這個線性變換把面積縮放了多少倍？</p>
+
+  <div class="insight">
+    <div class="icon">📐</div>
+    <p>$\det(A)$ = 矩陣 $A$ 對應的線性變換，把單位正方形（面積=1）變換成面積為 $|\det(A)|$ 的平行四邊形。<br>
+    符號為負時，表示<strong>翻轉了方向</strong>（左右翻轉）。</p>
+  </div>
+
+  <h2>二維行列式</h2>
+  <div class="math-block">$$\det\begin{pmatrix}a & b \\ c & d\end{pmatrix} = ad - bc$$</div>
+  <div class="card accent">
+    <h3>幾何推導</h3>
+    <p>基底向量 $\mathbf{e}_1 \to \mathbf{a} = (a, c)$，$\mathbf{e}_2 \to \mathbf{b} = (b, d)$<br>
+    以這兩個向量為鄰邊的平行四邊形面積：</p>
+    <div class="math-block">$$\text{面積} = |\mathbf{a} \times \mathbf{b}| = |ad - bc|$$</div>
+  </div>
+
+  <h2>行列式的性質</h2>
+  <table>
+    <tr><th>行列式值</th><th>意義</th><th>視覺</th></tr>
+    <tr><td>$\det = 0$</td><td>矩陣不可逆（奇異矩陣）</td><td>面積壓扁為 0（空間降維）</td></tr>
+    <tr><td>$|\det| > 1$</td><td>放大</td><td>面積變大</td></tr>
+    <tr><td>$|\det| < 1$</td><td>縮小</td><td>面積變小</td></tr>
+    <tr><td>$\det = 1$</td><td>等積變換（旋轉、剪切）</td><td>面積不變</td></tr>
+    <tr><td>$\det < 0$</td><td>翻轉方向</td><td>左手系變右手系</td></tr>
+  </table>
+
+  <h2>$\det(AB) = \det(A)\det(B)$</h2>
+  <div class="card cyan">
+    <p>幾何解釋：先用 $B$ 縮放，再用 $A$ 縮放，總縮放比例 = 兩者相乘。這是行列式最重要的性質。</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(13)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(15)">下一節 →</button>
+  </div>
+</div>
+
+<!-- SECTION 15: 特徵值 -->
+<div class="section" id="sec15">
+  <h1>3.4 特徵值與特徵向量</h1>
+  <p class="lead">大多數向量在線性變換後會改變方向。但有一些特殊向量——它們只被縮放，方向不變。</p>
+
+  <div class="insight">
+    <div class="icon">🎯</div>
+    <p><strong>特徵向量</strong>：被矩陣 $A$ 作用後，方向不變（只縮放）的非零向量 $\mathbf{v}$。<br>
+    <strong>特徵值</strong>：對應的縮放比例 $\lambda$。<br>
+    方程式：$A\mathbf{v} = \lambda\mathbf{v}$</p>
+  </div>
+
+  <div class="demo-area">
+    <h3>互動：特徵向量探索器（對稱矩陣）</h3>
+    <div class="canvas-wrap">
+      <canvas id="eigenCanvas" width="340" height="340"></canvas>
+      <div class="canvas-info">
+        <div class="slider-group"><label>a（對角元素）<span id="eigA">2.0</span></label><input type="range" id="eigSlA" min="-200" max="200" value="200" oninput="updateEigen()"></div>
+        <div class="slider-group"><label>b = c（非對角元素）<span id="eigB">1.0</span></label><input type="range" id="eigSlB" min="-150" max="150" value="100" oninput="updateEigen()"></div>
+        <div class="slider-group"><label>d（對角元素）<span id="eigD">1.0</span></label><input type="range" id="eigSlD" min="-200" max="200" value="100" oninput="updateEigen()"></div>
+        <div class="value-display"><div class="label">特徵值 λ₁, λ₂</div><div class="val" id="eigenvals">—</div></div>
+        <p class="hint">🔵 特徵向量 v₁（λ₁方向）<br>🔴 特徵向量 v₂（λ₂方向）<br>注意：對稱矩陣的特徵向量互相垂直！</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>求特徵值的方法</h2>
+  <div class="derivation">
+    <div class="step"><span class="label">由定義</span>$A\mathbf{v} = \lambda\mathbf{v}$ 即 $(A - \lambda I)\mathbf{v} = \mathbf{0}$</div>
+    <div class="step"><span class="label">非零解</span>需要 $\det(A - \lambda I) = 0$</div>
+    <div class="step"><span class="label">特徵多項式</span>解這個關於 $\lambda$ 的多項式方程</div>
+  </div>
+  <div class="math-block">$$\det\begin{pmatrix}a-\lambda & b \\ c & d-\lambda\end{pmatrix} = (a-\lambda)(d-\lambda) - bc = 0$$
+$$\lambda^2 - (a+d)\lambda + (ad-bc) = 0$$
+$$\lambda^2 - \text{tr}(A)\cdot\lambda + \det(A) = 0$$</div>
+
+  <div class="card cyan">
+    <h3>跡與行列式的意義</h3>
+    <p>$\lambda_1 + \lambda_2 = \text{tr}(A) = a + d$（跡 = 對角線元素之和）<br>
+    $\lambda_1 \cdot \lambda_2 = \det(A)$（行列式 = 特徵值之積）</p>
+  </div>
+
+  <div class="card amber">
+    <h3>對稱矩陣的特別性質（譜定理）</h3>
+    <p>對稱矩陣（$A = A^T$）的特徵向量<strong>互相垂直</strong>，特徵值都是實數。<br>
+    這是主成分分析（PCA）的數學基礎——把數據投影到特徵向量（主成分）的方向。</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(14)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(16)">終章 →</button>
+  </div>
+</div>
+
+<!-- SECTION 16: 大一統 -->
+<div class="section" id="sec16">
+  <h1>終章：三者的深刻連結</h1>
+  <p class="lead">現在我們可以看到整幅圖景——三角函數、向量、線性代數是同一個數學靈魂的三種語言。</p>
+
+  <h2>旋轉：三者的交匯點</h2>
+  <div class="card success">
+    <p>「旋轉角度 $\theta$」在三種語言中的表達：</p>
+    <div class="math-block">$$\underbrace{e^{i\theta}}_{\text{複數/三角}} = \underbrace{\cos\theta + i\sin\theta}_{\text{三角函數}} \longleftrightarrow \underbrace{\begin{pmatrix}\cos\theta & -\sin\theta \\ \sin\theta & \cos\theta\end{pmatrix}}_{\text{線性代數（旋轉矩陣）}}$$</div>
+  </div>
+
+  <h2>五個核心連結</h2>
+  <div class="card accent">
+    <h3>連結 1：內積 = cosθ</h3>
+    <p>$\mathbf{a}\cdot\mathbf{b} = |\mathbf{a}||\mathbf{b}|\cos\theta$——三角函數的 cos 直接定義了向量夾角的測量方式</p>
+  </div>
+  <div class="card cyan">
+    <h3>連結 2：外積/行列式 = sinθ</h3>
+    <p>$|\mathbf{a}\times\mathbf{b}| = |\mathbf{a}||\mathbf{b}|\sin\theta = \det\begin{pmatrix}a_1 & b_1 \\ a_2 & b_2\end{pmatrix}$——面積 = sin × 長度之積</p>
+  </div>
+  <div class="card amber">
+    <h3>連結 3：旋轉矩陣乘法 = 加法公式</h3>
+    <p>$R_\alpha R_\beta = R_{\alpha+\beta}$，展開就是 $\sin(\alpha+\beta)$ 和 $\cos(\alpha+\beta)$ 的公式</p>
+  </div>
+  <div class="card success">
+    <h3>連結 4：特徵向量 = 不旋轉的方向</h3>
+    <p>旋轉矩陣（$\theta\neq 0, \pi$）沒有實數特徵向量——任何方向在旋轉後都會改變。對稱矩陣的特徵向量互相垂直，如同坐標軸。</p>
+  </div>
+  <div class="card accent">
+    <h3>連結 5：傅立葉 = 三角函數作為正交基</h3>
+    <p>函數 $\{1, \cos x, \sin x, \cos 2x, \sin 2x, \ldots\}$ 在內積 $\langle f,g\rangle = \int_0^{2\pi}fg\,dx$ 下<strong>互相垂直</strong>（正交），就像 $\mathbf{e}_1, \mathbf{e}_2$ 互相垂直。<br>
+    傅立葉展開 = 把函數用這些「三角基底向量」分解——這正是線性代數的語言！</p>
+  </div>
+
+  <h2>你的學習成就</h2>
+  <div class="card" style="border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.05);">
+    <p>完成這門課程，你理解了：</p>
+    <p>✅ 三角函數的幾何定義（單位圓，不是直角三角形）<br>
+    ✅ 所有重要恆等式的推導原理<br>
+    ✅ 歐拉公式：$e^{i\pi}+1=0$ 的由來<br>
+    ✅ 向量的幾何本質與內積、外積的幾何意義<br>
+    ✅ 矩陣是線性變換，行列式是面積縮放比例<br>
+    ✅ 旋轉矩陣：三角函數在線性代數中的角色<br>
+    ✅ 特徵值的幾何意義<br>
+    ✅ 這三個領域如何在旋轉與傅立葉中完美交匯</p>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn btn-secondary" onclick="goto(15)">← 上一節</button>
+    <button class="btn btn-primary" onclick="goto(0)">回到目錄 ↑</button>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ============================================================
+// Navigation
+// ============================================================
+const TOTAL = 14;
+let current = 0;
+function goto(n) {
+  document.getElementById('sec'+current).classList.remove('active');
+  document.getElementById('nav'+current).classList.remove('active');
+  current = n;
+  document.getElementById('sec'+n).classList.add('active');
+  document.getElementById('nav'+n).classList.add('active');
+  openChapFor(n);
+  document.getElementById('progress').style.width = Math.round((n/(TOTAL-1))*100)+'%';
+  window.scrollTo(0,0);
+  // Trigger MathJax rerender
+  if(window.MathJax) MathJax.typesetPromise();
+  // Init canvases on first visit
+  const inits = {2:initCircle, 3:initSec3, 4:initCx, 5:initAdd, 6:initE, 7:initEuler, 8:initSummary1, 9:initVec, 10:initDot, 12:initMat, 13:initRot, 15:initEigen};
+  if(inits[n]) setTimeout(inits[n], 50);
+}
+
+// ============================================================
+// Utils
+// ============================================================
+function r2d(r){ return r*180/Math.PI; }
+function d2r(d){ return d*Math.PI/180; }
+function setupCanvas(id){
+  const c=document.getElementById(id), ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height); return {c,ctx,w:c.width,h:c.height};
+}
+function arrow(ctx,x1,y1,x2,y2,col,lw=2,ah=8){
+  ctx.save();ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=lw;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  const a=Math.atan2(y2-y1,x2-x1);
+  ctx.beginPath();ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-ah*Math.cos(a-0.4),y2-ah*Math.sin(a-0.4));
+  ctx.lineTo(x2-ah*Math.cos(a+0.4),y2-ah*Math.sin(a+0.4));
+  ctx.closePath();ctx.fill();ctx.restore();
+}
+function grid(ctx,cx,cy,scale,w,h){
+  ctx.save();ctx.strokeStyle='rgba(100,100,160,0.25)';ctx.lineWidth=0.5;
+  for(let x=-10;x<=10;x++){
+    const px=cx+x*scale;if(px<0||px>w)continue;
+    ctx.beginPath();ctx.moveTo(px,0);ctx.lineTo(px,h);ctx.stroke();
+  }
+  for(let y=-10;y<=10;y++){
+    const py=cy+y*scale;if(py<0||py>h)continue;
+    ctx.beginPath();ctx.moveTo(0,py);ctx.lineTo(w,py);ctx.stroke();
+  }
+  ctx.strokeStyle='rgba(150,150,200,0.5)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(w,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,h);ctx.stroke();
+  ctx.restore();
+}
+
+// ============================================================
+// Sec3: Negative Angle (symCanvas) + Complementary Angle (compCanvas)
+// ============================================================
+let sec3Ready = false;
+function initSec3(){ sec3Ready = true; updateSym(); updateComp(); updateOddEven(); updateSupp(); updateDouble(); }
+
+// --- Odd / Even Function Graph ---
+function updateOddEven(){
+  if(!sec3Ready) return;
+  const deg = +document.getElementById('oeSlider').value;
+  document.getElementById('oeDegLabel').textContent = deg + '°';
+  drawOddEven(d2r(deg));
+}
+
+function drawOddEven(theta){
+  const canvas = document.getElementById('oddEvenCanvas');
+  // Use actual pixel dimensions for sharp rendering
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // ── Layout ──────────────────────────────────────────────
+  const divX = W / 2;          // divider between two plots
+  const padL = 28, padR = 16, padT = 22, padB = 28;
+
+  // Subplot inner boxes
+  const lx0 = padL, lx1 = divX - padR;          // left x range
+  const rx0 = divX + padL, rx1 = W - padR;       // right x range
+  const cy  = padT + (H - padT - padB) / 2;      // shared vertical center
+  const halfH = (H - padT - padB) / 2 - 4;       // half height available
+
+  const xSc = (lx1 - lx0) / (2 * Math.PI);  // px per radian
+  const ySc = halfH / 1.15;                  // px per unit (leave a bit of room)
+
+  // Helpers
+  function lpx(t){ return (lx0+lx1)/2 + t * xSc; }  // left plot: radian → canvas x
+  function rpx(t){ return (rx0+rx1)/2 + t * xSc; }  // right plot
+  function cfy(v){ return cy - v * ySc; }             // value → canvas y
+
+  // ── Shared drawing utilities ─────────────────────────────
+  function drawAxes(cx0, cx1, label, color){
+    const midX = (cx0+cx1)/2;
+    // x-axis
+    ctx.save();
+    ctx.strokeStyle='rgba(150,150,200,0.35)'; ctx.lineWidth=1; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(cx0, cy); ctx.lineTo(cx1, cy); ctx.stroke();
+    // y-axis
+    ctx.beginPath(); ctx.moveTo(midX, padT); ctx.lineTo(midX, H-padB); ctx.stroke();
+    // tick marks
+    ctx.strokeStyle='rgba(150,150,200,0.25)'; ctx.lineWidth=0.5;
+    [-Math.PI, -Math.PI/2, Math.PI/2, Math.PI].forEach(t=>{
+      const px = midX + t*xSc;
+      ctx.beginPath(); ctx.moveTo(px, cy-3); ctx.lineTo(px, cy+3); ctx.stroke();
+    });
+    [-1, 1].forEach(v=>{
+      ctx.beginPath(); ctx.moveTo(midX-3, cfy(v)); ctx.lineTo(midX+3, cfy(v)); ctx.stroke();
+    });
+    // axis labels
+    ctx.fillStyle='rgba(150,150,200,0.5)'; ctx.font='10px monospace';
+    ctx.fillText('-π', midX-Math.PI*xSc-8, cy+14);
+    ctx.fillText(' π', midX+Math.PI*xSc-4, cy+14);
+    ctx.fillText('1',  midX+4, cfy(1)+4);
+    ctx.fillText('-1', midX+4, cfy(-1)+4);
+    // Plot title
+    ctx.fillStyle = color; ctx.font='bold 12px sans-serif';
+    ctx.fillText(label, cx0, padT - 6);
+    ctx.restore();
+  }
+
+  function drawCurve(fn, cx0, cx1, color){
+    const midX = (cx0+cx1)/2;
+    ctx.save();
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash([]);
+    ctx.beginPath();
+    const steps = 300;
+    for(let i=0; i<=steps; i++){
+      const t = -Math.PI + i*(2*Math.PI/steps);
+      const px = midX + t*xSc, py = cfy(fn(t));
+      i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ── LEFT PLOT: cos(x) — Even function ────────────────────
+  drawAxes(lx0, lx1, 'cos(x)　偶函數', '#60a5fa');
+  drawCurve(Math.cos, lx0, lx1, 'rgba(96,165,250,0.55)');
+
+  const lmid = (lx0+lx1)/2;
+
+  // y-axis mirror highlight (yellow dashed)
+  ctx.save();
+  ctx.strokeStyle='rgba(250,210,60,0.7)'; ctx.lineWidth=1.5; ctx.setLineDash([6,3]);
+  ctx.beginPath(); ctx.moveTo(lmid, padT); ctx.lineTo(lmid, H-padB); ctx.stroke();
+  ctx.fillStyle='rgba(250,210,60,0.8)'; ctx.font='10px sans-serif';
+  ctx.fillText('y 軸', lmid+3, padT+2);
+  ctx.restore();
+
+  // Horizontal dashed line at height cos(θ) — same for both ±θ
+  const lyP = cfy(Math.cos(theta));
+  ctx.save();
+  ctx.strokeStyle='rgba(200,200,200,0.35)'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(lmid - theta*xSc - 8, lyP); ctx.lineTo(lmid + theta*xSc + 8, lyP); ctx.stroke();
+  ctx.restore();
+
+  // Vertical drop lines from x-axis to points
+  ctx.save(); ctx.strokeStyle='rgba(200,200,200,0.2)'; ctx.lineWidth=1; ctx.setLineDash([2,3]);
+  ctx.beginPath(); ctx.moveTo(lmid+theta*xSc, cy); ctx.lineTo(lmid+theta*xSc, lyP); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lmid-theta*xSc, cy); ctx.lineTo(lmid-theta*xSc, lyP); ctx.stroke();
+  ctx.restore();
+
+  // Points: θ (purple) and -θ (red) — same y!
+  ctx.save();
+  ctx.fillStyle='#a78bfa';
+  ctx.beginPath(); ctx.arc(lmid+theta*xSc, lyP, 5, 0, 2*Math.PI); ctx.fill();
+  ctx.fillStyle='#f87171';
+  ctx.beginPath(); ctx.arc(lmid-theta*xSc, lyP, 5, 0, 2*Math.PI); ctx.fill();
+
+  // "相同高度" label on the horizontal line
+  ctx.fillStyle='rgba(200,200,200,0.7)'; ctx.font='10px sans-serif';
+  ctx.fillText('相同高度', lmid + 4, lyP - 5);
+
+  // θ and -θ labels on x-axis
+  ctx.fillStyle='#a78bfa'; ctx.font='bold 10px sans-serif';
+  ctx.fillText('θ',  lmid+theta*xSc-3, cy+13);
+  ctx.fillStyle='#f87171';
+  ctx.fillText('-θ', lmid-theta*xSc-6, cy+13);
+  ctx.restore();
+
+  // ── RIGHT PLOT: sin(x) — Odd function ────────────────────
+  drawAxes(rx0, rx1, 'sin(x)　奇函數', '#f87171');
+  drawCurve(Math.sin, rx0, rx1, 'rgba(248,113,113,0.55)');
+
+  const rmid = (rx0+rx1)/2;
+
+  // Origin highlight circle
+  ctx.save();
+  ctx.strokeStyle='rgba(250,210,60,0.8)'; ctx.lineWidth=1.5; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.arc(rmid, cy, 5, 0, 2*Math.PI); ctx.stroke();
+  ctx.fillStyle='rgba(250,210,60,0.8)'; ctx.font='10px sans-serif';
+  ctx.fillText('原點', rmid+6, cy-5);
+  ctx.restore();
+
+  // Dashed line THROUGH origin connecting (θ, sin θ) and (-θ, -sin θ)
+  const ryP = cfy(Math.sin(theta));
+  const ryN = cfy(-Math.sin(theta));   // = cfy(Math.sin(-theta))
+  ctx.save();
+  ctx.strokeStyle='rgba(200,200,200,0.35)'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(rmid+theta*xSc, ryP); ctx.lineTo(rmid-theta*xSc, ryN); ctx.stroke();
+  ctx.restore();
+
+  // Vertical drop lines
+  ctx.save(); ctx.strokeStyle='rgba(200,200,200,0.2)'; ctx.lineWidth=1; ctx.setLineDash([2,3]);
+  ctx.beginPath(); ctx.moveTo(rmid+theta*xSc, cy); ctx.lineTo(rmid+theta*xSc, ryP); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(rmid-theta*xSc, cy); ctx.lineTo(rmid-theta*xSc, ryN); ctx.stroke();
+  ctx.restore();
+
+  // Points
+  ctx.save();
+  ctx.fillStyle='#a78bfa';
+  ctx.beginPath(); ctx.arc(rmid+theta*xSc, ryP, 5, 0, 2*Math.PI); ctx.fill();
+  ctx.fillStyle='#f87171';
+  ctx.beginPath(); ctx.arc(rmid-theta*xSc, ryN, 5, 0, 2*Math.PI); ctx.fill();
+
+  // "高度相反" label near midpoint of the slanted line
+  const midLineX = rmid, midLineY = cy;
+  ctx.fillStyle='rgba(200,200,200,0.7)'; ctx.font='10px sans-serif';
+  ctx.fillText('高度相反', midLineX+4, midLineY - 8);
+
+  // θ and -θ labels
+  ctx.fillStyle='#a78bfa'; ctx.font='bold 10px sans-serif';
+  ctx.fillText('θ',  rmid+theta*xSc-3, cy+13);
+  ctx.fillStyle='#f87171';
+  ctx.fillText('-θ', rmid-theta*xSc-6, cy+13);
+  ctx.restore();
+
+  // ── Divider line ─────────────────────────────────────────
+  ctx.save();
+  ctx.strokeStyle='rgba(100,100,150,0.4)'; ctx.lineWidth=1; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(divX, 0); ctx.lineTo(divX, H); ctx.stroke();
+  ctx.restore();
+}
+
+// --- Supplementary Angle (π − θ): y-axis reflection ---
+function updateSupp(){
+  if(!sec3Ready) return;
+  const deg = +document.getElementById('suppSlider').value;
+  const theta = d2r(deg);
+  document.getElementById('suppDegLabel').textContent = deg + '°';
+  const s = Math.sin(theta), c = Math.cos(theta);
+  document.getElementById('suppSin').textContent     =  s.toFixed(4);
+  document.getElementById('suppSinComp').textContent =  s.toFixed(4);   // same
+  document.getElementById('suppCos').textContent     =  c.toFixed(4);
+  document.getElementById('suppCosComp').textContent = (-c).toFixed(4); // negated
+  drawSupp(theta);
+}
+function drawSupp(theta){
+  const {ctx,w,h} = setupCanvas('suppCanvas');
+  const cx=w/2, cy=h/2, R=120;
+  grid(ctx, cx, cy, R, w, h);
+
+  // y-axis mirror highlight (yellow dashed)
+  ctx.save();
+  ctx.strokeStyle='rgba(250,210,60,0.7)'; ctx.lineWidth=1.8; ctx.setLineDash([6,3]);
+  ctx.beginPath(); ctx.moveTo(cx, 8); ctx.lineTo(cx, h-8); ctx.stroke();
+  ctx.fillStyle='rgba(250,210,60,0.8)'; ctx.font='10px sans-serif';
+  ctx.fillText('y 軸（對稱軸）', cx+4, 20);
+  ctx.restore();
+
+  // Unit circle
+  ctx.save();
+  ctx.strokeStyle='rgba(180,180,255,0.55)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,2*Math.PI); ctx.stroke();
+  ctx.restore();
+
+  const px = cx + R*Math.cos(theta),   py = cy - R*Math.sin(theta);   // θ (right side)
+  const qx = cx + R*Math.cos(Math.PI-theta), qy = cy - R*Math.sin(Math.PI-theta); // π-θ (left side, same y)
+
+  // Horizontal dashed line (same height, sin unchanged)
+  ctx.save();
+  ctx.strokeStyle='rgba(200,200,200,0.35)'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(qx, py); ctx.lineTo(px, py); ctx.stroke();
+  // Drop lines to x-axis
+  ctx.strokeStyle='rgba(200,200,200,0.2)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(px, cy); ctx.lineTo(px, py); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(qx, cy); ctx.lineTo(qx, qy); ctx.stroke();
+  ctx.restore();
+
+  // Mirror dashed line between two points
+  ctx.save();
+  ctx.strokeStyle='rgba(200,200,200,0.2)'; ctx.lineWidth=1; ctx.setLineDash([2,4]);
+  ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(qx,qy); ctx.stroke();
+  ctx.restore();
+
+  // cos θ (blue arrow to x-axis) and cos(π-θ) (red, opposite direction)
+  ctx.save();
+  ctx.strokeStyle='#60a5fa'; ctx.lineWidth=2; ctx.setLineDash([4,2]);
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, cy); ctx.stroke();
+  ctx.strokeStyle='#f87171';
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(qx, cy); ctx.stroke();
+  ctx.restore();
+
+  // sin θ (purple, vertical) — same for both
+  ctx.save();
+  ctx.strokeStyle='#a78bfa'; ctx.lineWidth=2.5; ctx.setLineDash([4,2]);
+  ctx.beginPath(); ctx.moveTo(px, cy); ctx.lineTo(px, py); ctx.stroke();
+  ctx.restore();
+
+  // Radii
+  arrow(ctx, cx, cy, px, py, '#a78bfa', 2.5);
+  arrow(ctx, cx, cy, qx, qy, '#f87171', 2.5);
+
+  // Points
+  ctx.save();
+  ctx.fillStyle='#a78bfa'; ctx.beginPath(); ctx.arc(px,py,5,0,2*Math.PI); ctx.fill();
+  ctx.fillStyle='#f87171'; ctx.beginPath(); ctx.arc(qx,qy,5,0,2*Math.PI); ctx.fill();
+  ctx.restore();
+
+  // Labels
+  ctx.save();
+  ctx.font='bold 12px sans-serif';
+  ctx.fillStyle='#a78bfa'; ctx.fillText('θ='+r2d(theta).toFixed(0)+'°', px+5, py-6);
+  ctx.fillStyle='#f87171'; ctx.fillText('π−θ', qx-38, qy-6);
+  ctx.font='11px sans-serif';
+  ctx.fillStyle='rgba(200,200,200,0.7)'; ctx.fillText('sin θ 相同', cx+6, py-5);
+  ctx.fillStyle='#60a5fa'; ctx.fillText('cos θ', cx+4, cy+14);
+  ctx.fillStyle='#f87171'; ctx.fillText('−cos θ', qx-42, cy+14);
+  ctx.restore();
+}
+
+// --- Double Angle (2α) ---
+function updateDouble(){
+  if(!sec3Ready) return;
+  const deg = +document.getElementById('dblSlider').value;
+  const alpha = d2r(deg);
+  document.getElementById('dblDegLabel').textContent = deg + '°';
+  document.getElementById('dbl2alpha').textContent   = (deg*2) + '°';
+  const s = Math.sin(alpha), c = Math.cos(alpha);
+  const sin2a = Math.sin(2*alpha), twosc = 2*s*c;
+  document.getElementById('dblSin2a').textContent = sin2a.toFixed(5);
+  document.getElementById('dbl2sc').textContent   = twosc.toFixed(5);
+  const cos2a = Math.cos(2*alpha);
+  document.getElementById('dblv1').textContent = (c*c - s*s).toFixed(4);
+  document.getElementById('dblv2').textContent = (2*c*c - 1).toFixed(4);
+  document.getElementById('dblv3').textContent = (1 - 2*s*s).toFixed(4);
+  drawDouble(alpha);
+}
+function drawDouble(alpha){
+  const {ctx,w,h} = setupCanvas('dblCanvas');
+  const cx=w/2, cy=h/2, R=128;
+  grid(ctx, cx, cy, 60, w, h);
+
+  // Unit circle
+  ctx.save();
+  ctx.strokeStyle='rgba(180,180,255,0.5)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,2*Math.PI); ctx.stroke();
+  ctx.restore();
+
+  const s = Math.sin(alpha), c = Math.cos(alpha);
+  const px = cx + R*c,   py = cy - R*s;          // P at angle α
+  const qx = cx + R*Math.cos(2*alpha), qy = cy - R*Math.sin(2*alpha); // Q at angle 2α
+  const foot = cx + R*c;  // foot of perpendicular from P to x-axis = (R·cosα, 0)
+
+  // α arc (purple)
+  ctx.save();
+  ctx.strokeStyle='#a78bfa'; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.arc(cx,cy,38, 0, -alpha, true); ctx.stroke();
+  ctx.fillStyle='#a78bfa'; ctx.font='bold 11px sans-serif';
+  const amid = -alpha/2;
+  ctx.fillText('α', cx+46*Math.cos(-amid)-4, cy+46*Math.sin(-amid)+4);
+  ctx.restore();
+
+  // 2α arc (cyan)
+  ctx.save();
+  ctx.strokeStyle='#22d3ee'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cy,58, 0, -2*alpha, true); ctx.stroke();
+  ctx.fillStyle='#22d3ee'; ctx.font='bold 11px sans-serif';
+  const a2mid = -alpha;
+  ctx.fillText('2α', cx+66*Math.cos(-a2mid)-8, cy+66*Math.sin(-a2mid)+4);
+  ctx.restore();
+
+  // Right triangle legs at angle α
+  // Horizontal leg: O → (R·cosα, 0) — blue
+  ctx.save();
+  ctx.strokeStyle='#60a5fa'; ctx.lineWidth=2.5; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(foot, cy); ctx.stroke();
+  ctx.fillStyle='#60a5fa'; ctx.font='12px sans-serif';
+  ctx.fillText('cos α', cx+(foot-cx)/2-18, cy+16);
+  ctx.restore();
+
+  // Vertical leg: (R·cosα, 0) → P — red
+  ctx.save();
+  ctx.strokeStyle='#f87171'; ctx.lineWidth=2.5; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(foot, cy); ctx.lineTo(foot, py); ctx.stroke();
+  ctx.fillStyle='#f87171'; ctx.font='12px sans-serif';
+  ctx.fillText('sin α', foot+5, (cy+py)/2+4);
+  ctx.restore();
+
+  // Right-angle mark
+  ctx.save();
+  ctx.strokeStyle='rgba(200,200,200,0.4)'; ctx.lineWidth=1;
+  const rm=8;
+  ctx.beginPath(); ctx.moveTo(foot-rm,cy); ctx.lineTo(foot-rm,cy-rm); ctx.lineTo(foot,cy-rm); ctx.stroke();
+  ctx.restore();
+
+  // sin(2α): vertical drop from Q to x-axis — green
+  ctx.save();
+  ctx.strokeStyle='#4ade80'; ctx.lineWidth=2.5; ctx.setLineDash([4,2]);
+  ctx.beginPath(); ctx.moveTo(qx, cy); ctx.lineTo(qx, qy); ctx.stroke();
+  ctx.fillStyle='#4ade80'; ctx.font='bold 11px sans-serif';
+  ctx.fillText('sin 2α', qx+5, (cy+qy)/2+4);
+  ctx.restore();
+
+  // Hypotenuse of right triangle (radius to P)
+  arrow(ctx, cx, cy, px, py, '#a78bfa', 2.5);
+  // Radius to Q
+  arrow(ctx, cx, cy, qx, qy, '#22d3ee', 2.5);
+
+  // Area annotation: shade the right triangle
+  ctx.save();
+  ctx.fillStyle='rgba(124,58,237,0.08)';
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(foot,cy); ctx.lineTo(foot,py); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='rgba(124,58,237,0.5)'; ctx.font='10px sans-serif';
+  ctx.fillText('面積', (cx+foot+foot)/3-8, (cy+py)/2+14);
+  ctx.fillText('=sinα·cosα', (cx+foot+foot)/3-24, (cy+py)/2+26);
+  ctx.restore();
+
+  // Points
+  ctx.save();
+  ctx.fillStyle='#a78bfa'; ctx.beginPath(); ctx.arc(px,py,5,0,2*Math.PI); ctx.fill();
+  ctx.fillStyle='#22d3ee'; ctx.beginPath(); ctx.arc(qx,qy,5,0,2*Math.PI); ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.font='bold 11px sans-serif';
+  ctx.fillStyle='#a78bfa'; ctx.fillText('P(α)',  px+5, py-5);
+  ctx.fillStyle='#22d3ee'; ctx.fillText('Q(2α)', qx+5, qy-5);
+  ctx.restore();
+}
+
+// --- Negative Angle ---
+function updateSym(){
+  if(!sec3Ready) return;
+  const deg = +document.getElementById('symSlider').value;
+  const theta = d2r(deg);
+  document.getElementById('symDegLabel').textContent = deg + '°';
+  const c = Math.cos(theta), s = Math.sin(theta);
+  document.getElementById('symCos').textContent    =  c.toFixed(4);
+  document.getElementById('symCosNeg').textContent =  c.toFixed(4);
+  document.getElementById('symSin').textContent    =  s.toFixed(4);
+  document.getElementById('symSinNeg').textContent = (-s).toFixed(4);
+  drawSym(theta);
+}
+function drawSym(theta){
+  const {ctx,w,h} = setupCanvas('symCanvas');
+  const cx=w/2, cy=h/2, R=120;
+  grid(ctx, cx, cy, R, w, h);
+
+  // y = x mirror line hint (faint)
+  ctx.save();
+  ctx.strokeStyle='rgba(200,200,80,0.15)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(0,h); ctx.lineTo(w,0); ctx.stroke();
+  ctx.restore();
+
+  // x-axis as mirror axis (highlighted)
+  ctx.save();
+  ctx.strokeStyle='rgba(100,200,255,0.45)'; ctx.lineWidth=1.5; ctx.setLineDash([6,3]);
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(w,cy); ctx.stroke();
+  ctx.fillStyle='rgba(100,200,255,0.6)'; ctx.font='11px sans-serif';
+  ctx.fillText('對稱軸 (x 軸)', cx+4, cy-6);
+  ctx.restore();
+
+  // Unit circle
+  ctx.save();
+  ctx.strokeStyle='rgba(180,180,255,0.55)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2*Math.PI); ctx.stroke();
+  ctx.restore();
+
+  const px = cx + R*Math.cos(theta), py = cy - R*Math.sin(theta);
+  const nx = cx + R*Math.cos(-theta), ny = cy - R*Math.sin(-theta); // = cy + R*sin(theta)
+
+  // Mirror dashed line connecting two points
+  ctx.save();
+  ctx.strokeStyle='rgba(200,200,200,0.25)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(nx,ny); ctx.stroke();
+  ctx.restore();
+
+  // cos projection (shared, both points, on x-axis)
+  ctx.save();
+  ctx.strokeStyle='#60a5fa'; ctx.lineWidth=2; ctx.setLineDash([4,2]);
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, cy); ctx.stroke();
+  ctx.restore();
+
+  // sin for θ (purple, upward)
+  ctx.save();
+  ctx.strokeStyle='#a78bfa'; ctx.lineWidth=2.5; ctx.setLineDash([4,2]);
+  ctx.beginPath(); ctx.moveTo(px,cy); ctx.lineTo(px,py); ctx.stroke();
+  ctx.restore();
+
+  // sin for -θ (red, downward)
+  ctx.save();
+  ctx.strokeStyle='#f87171'; ctx.lineWidth=2.5; ctx.setLineDash([4,2]);
+  ctx.beginPath(); ctx.moveTo(nx,cy); ctx.lineTo(nx,ny); ctx.stroke();
+  ctx.restore();
+
+  // Radii
+  arrow(ctx, cx, cy, px, py, '#a78bfa', 2.5);
+  arrow(ctx, cx, cy, nx, ny, '#f87171', 2.5);
+
+  // Points
+  ctx.save();
+  ctx.fillStyle='#a78bfa'; ctx.beginPath(); ctx.arc(px,py,5,0,2*Math.PI); ctx.fill();
+  ctx.fillStyle='#f87171'; ctx.beginPath(); ctx.arc(nx,ny,5,0,2*Math.PI); ctx.fill();
+  ctx.restore();
+
+  // Labels
+  ctx.save();
+  ctx.font='bold 12px sans-serif';
+  ctx.fillStyle='#a78bfa'; ctx.fillText('θ='+ r2d(theta).toFixed(0)+'°', px+6, py-4);
+  ctx.fillStyle='#f87171'; ctx.fillText('−θ', nx+6, ny+14);
+
+  ctx.font='12px sans-serif';
+  ctx.fillStyle='#60a5fa';
+  ctx.fillText('cos θ (相同)', cx+4, cy-16);
+  ctx.fillStyle='#a78bfa';
+  ctx.fillText('sin θ', px+6, (py+cy)/2);
+  ctx.fillStyle='#f87171';
+  ctx.fillText('−sin θ', nx+6, (ny+cy)/2);
+  ctx.restore();
+}
+
+// --- Complementary Angle ---
+function updateComp(){
+  if(!sec3Ready) return;
+  const deg = +document.getElementById('compSlider').value;
+  const theta = d2r(deg);
+  const comp = Math.PI/2 - theta;
+  document.getElementById('compDegLabel').textContent = deg + '°';
+  const s=Math.sin(theta), c=Math.cos(theta);
+  document.getElementById('compSin').textContent    = s.toFixed(4);
+  document.getElementById('compCos90').textContent  = s.toFixed(4);
+  document.getElementById('compCos').textContent    = c.toFixed(4);
+  document.getElementById('compSin90').textContent  = c.toFixed(4);
+  drawComp(theta, comp);
+}
+function drawComp(theta, comp){
+  const {ctx,w,h} = setupCanvas('compCanvas');
+  const cx=w/2, cy=h/2, R=120;
+  grid(ctx, cx, cy, R, w, h);
+
+  // y = x mirror axis
+  ctx.save();
+  ctx.strokeStyle='rgba(250,220,60,0.5)'; ctx.lineWidth=1.5; ctx.setLineDash([6,3]);
+  ctx.beginPath(); ctx.moveTo(cx-R, cy+R); ctx.lineTo(cx+R, cy-R); ctx.stroke();
+  ctx.fillStyle='rgba(250,220,60,0.7)'; ctx.font='11px sans-serif';
+  ctx.fillText('對稱軸 y = x', cx+R*0.3+4, cy-R*0.3-6);
+  ctx.restore();
+
+  // Unit circle
+  ctx.save();
+  ctx.strokeStyle='rgba(180,180,255,0.55)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2*Math.PI); ctx.stroke();
+  ctx.restore();
+
+  const px = cx + R*Math.cos(theta),  py = cy - R*Math.sin(theta);
+  const qx = cx + R*Math.cos(comp),   qy = cy - R*Math.sin(comp);
+
+  // Mirror dashed line
+  ctx.save();
+  ctx.strokeStyle='rgba(200,200,200,0.25)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(qx,qy); ctx.stroke();
+  ctx.restore();
+
+  // cos θ projection (blue, horizontal from P)
+  ctx.save();
+  ctx.strokeStyle='#60a5fa'; ctx.lineWidth=2; ctx.setLineDash([4,2]);
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(px,cy); ctx.stroke();
+  ctx.restore();
+
+  // sin θ projection (purple, vertical from P)
+  ctx.save();
+  ctx.strokeStyle='#a78bfa'; ctx.lineWidth=2; ctx.setLineDash([4,2]);
+  ctx.beginPath(); ctx.moveTo(px,cy); ctx.lineTo(px,py); ctx.stroke();
+  ctx.restore();
+
+  // cos(90-θ) projection (horizontal from Q) — equals sin θ
+  ctx.save();
+  ctx.strokeStyle='#22d3ee'; ctx.lineWidth=2; ctx.setLineDash([4,2]);
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(qx,cy); ctx.stroke();
+  ctx.restore();
+
+  // sin(90-θ) projection (vertical from Q) — equals cos θ
+  ctx.save();
+  ctx.strokeStyle='#fbbf24'; ctx.lineWidth=2; ctx.setLineDash([4,2]);
+  ctx.beginPath(); ctx.moveTo(qx,cy); ctx.lineTo(qx,qy); ctx.stroke();
+  ctx.restore();
+
+  // Angle arcs
+  ctx.save();
+  ctx.strokeStyle='#a78bfa'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx, cy, 36, 0, -theta, true); ctx.stroke();
+  ctx.strokeStyle='#fbbf24';
+  ctx.beginPath(); ctx.arc(cx, cy, 50, 0, -comp, true); ctx.stroke();
+  ctx.restore();
+
+  // Radii
+  arrow(ctx, cx, cy, px, py, '#a78bfa', 2.5);
+  arrow(ctx, cx, cy, qx, qy, '#fbbf24', 2.5);
+
+  // Points
+  ctx.save();
+  ctx.fillStyle='#a78bfa'; ctx.beginPath(); ctx.arc(px,py,5,0,2*Math.PI); ctx.fill();
+  ctx.fillStyle='#fbbf24'; ctx.beginPath(); ctx.arc(qx,qy,5,0,2*Math.PI); ctx.fill();
+  ctx.restore();
+
+  // Swap arrows (show x,y swap)
+  ctx.save();
+  ctx.font='bold 12px sans-serif';
+  ctx.fillStyle='#a78bfa';
+  ctx.fillText('θ='+ r2d(theta).toFixed(0)+'°', px+6, py-4);
+  ctx.fillStyle='#fbbf24';
+  ctx.fillText('90°−θ='+ r2d(comp).toFixed(0)+'°', qx+6, qy-4);
+
+  ctx.font='11px monospace';
+  ctx.fillStyle='#60a5fa';
+  ctx.fillText('cos θ='+Math.cos(theta).toFixed(3), cx+4, cy+18);
+  ctx.fillStyle='#a78bfa';
+  ctx.fillText('sin θ='+Math.sin(theta).toFixed(3), px+6, (py+cy)/2);
+  ctx.fillStyle='#22d3ee';
+  ctx.fillText('= sin(90°−θ)', cx+4, cy+32);
+  ctx.restore();
+}
+
+// ============================================================
+// 1. Unit Circle
+// ============================================================
+let circleReady=false;
+function initCircle(){ circleReady=true; updateCircle(); }
+function updateCircle(){
+  if(!circleReady)return;
+  const sl=document.getElementById('angleSlider');
+  const theta=sl.value/100;
+  const deg=r2d(theta);
+  const radStr=fmtRad(theta);
+  document.getElementById('degLabel').textContent=deg.toFixed(1)+'°';
+  document.getElementById('radLabel').textContent=radStr;
+  const s=Math.sin(theta),c=Math.cos(theta),t=s/c;
+  document.getElementById('cosVal').textContent=c.toFixed(4);
+  document.getElementById('sinVal').textContent=s.toFixed(4);
+  document.getElementById('tanVal').textContent=Math.abs(c)<0.01?'±∞':t.toFixed(4);
+  document.getElementById('pyVal').textContent=(s*s+c*c).toFixed(6);
+  drawCircle(theta);
+}
+function fmtRad(r){
+  const fracs=[[0,'0'],[Math.PI/6,'π/6'],[Math.PI/4,'π/4'],[Math.PI/3,'π/3'],[Math.PI/2,'π/2'],[2*Math.PI/3,'2π/3'],[3*Math.PI/4,'3π/4'],[5*Math.PI/6,'5π/6'],[Math.PI,'π'],[7*Math.PI/6,'7π/6'],[5*Math.PI/4,'5π/4'],[4*Math.PI/3,'4π/3'],[3*Math.PI/2,'3π/2'],[5*Math.PI/3,'5π/3'],[7*Math.PI/4,'7π/4'],[11*Math.PI/6,'11π/6'],[2*Math.PI,'2π']];
+  for(const [v,n] of fracs) if(Math.abs(r-v)<0.05) return n;
+  return r.toFixed(3);
+}
+function drawCircle(theta){
+  const {ctx,w,h}=setupCanvas('unitCircle');
+  const cx=w/2,cy=h/2,R=130;
+  grid(ctx,cx,cy,R,w,h);
+  // Circle
+  ctx.save();ctx.strokeStyle='rgba(180,180,255,0.6)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(cx,cy,R,0,2*Math.PI);ctx.stroke();ctx.restore();
+  const px=cx+R*Math.cos(theta), py=cy-R*Math.sin(theta);
+  // Angle arc
+  ctx.save();ctx.strokeStyle='rgba(200,200,80,0.5)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(cx,cy,40,0,-theta,true);ctx.stroke();ctx.restore();
+  // cos line (blue)
+  ctx.save();ctx.strokeStyle='#60a5fa';ctx.lineWidth=2.5;ctx.setLineDash([4,2]);
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(px,cy);ctx.stroke();ctx.restore();
+  // sin line (red)
+  ctx.save();ctx.strokeStyle='#f87171';ctx.lineWidth=2.5;ctx.setLineDash([4,2]);
+  ctx.beginPath();ctx.moveTo(px,cy);ctx.lineTo(px,py);ctx.stroke();ctx.restore();
+  // tan line (yellow) - only when cos > 0.1
+  if(Math.abs(Math.cos(theta))>0.1){
+    const tx=cx+R, ty=cy-R*Math.tan(theta);
+    ctx.save();ctx.strokeStyle='#fbbf24';ctx.lineWidth=2;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(cx+R,cy);ctx.lineTo(tx,ty);ctx.stroke();
+    ctx.beginPath();ctx.arc(tx,ty,4,0,2*Math.PI);ctx.fillStyle='#fbbf24';ctx.fill();
+    ctx.restore();
+  }
+  // Radius line
+  arrow(ctx,cx,cy,px,py,'#c4b5fd',2.5);
+  // Point
+  ctx.save();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(px,py,5,0,2*Math.PI);ctx.fill();ctx.restore();
+  // Labels
+  ctx.save();ctx.fillStyle='#94a3b8';ctx.font='12px monospace';
+  ctx.fillText('1',cx+R+4,cy-4);ctx.fillText('-1',cx-R-24,cy-4);
+  ctx.fillText('i',cx+4,cy-R-4);ctx.fillText('-i',cx+4,cy+R+14);
+  ctx.fillStyle='#60a5fa';ctx.font='bold 12px sans-serif';
+  ctx.fillText('cosθ='+Math.cos(theta).toFixed(3),cx+4,cy+16);
+  ctx.fillStyle='#f87171';ctx.fillText('sinθ='+Math.sin(theta).toFixed(3),px+6,py);
+  ctx.restore();
+}
+
+// ============================================================
+// 1.5  Complex Plane section (sec4)
+// ============================================================
+let cxReady = false;
+function initCx(){ cxReady=true; updateCx(); updateCxMul(); }
+
+function updateCx(){
+  if(!cxReady) return;
+  const rRaw = +document.getElementById('cxRSlider').value;   // 20..100
+  const r = rRaw / 100;
+  const deg = +document.getElementById('cxAngSlider').value;
+  const theta = d2r(deg);
+  document.getElementById('cxRLabel').textContent = r.toFixed(2);
+  document.getElementById('cxAngLabel').textContent = deg + '°';
+  const a = r * Math.cos(theta);
+  const b = r * Math.sin(theta);
+  document.getElementById('cxRealVal').textContent = a.toFixed(3);
+  document.getElementById('cxImagVal').textContent = b.toFixed(3);
+  document.getElementById('cxModVal').textContent = r.toFixed(3);
+  drawCxPlane(r, theta);
+}
+
+function drawCxPlane(r, theta){
+  const {ctx,w,h} = setupCanvas('cxPlaneCanvas');
+  const cx=w/2, cy=h/2, SCALE=110;
+  ctx.clearRect(0,0,w,h);
+  // Axes
+  ctx.save(); ctx.strokeStyle='rgba(180,180,255,0.3)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(w,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,h); ctx.stroke(); ctx.restore();
+  // Axis labels
+  ctx.save(); ctx.fillStyle='rgba(180,180,255,0.5)'; ctx.font='11px sans-serif';
+  ctx.fillText('Re',w-22,cy-6); ctx.fillText('Im',cx+6,14); ctx.restore();
+  // Unit circle (faint)
+  ctx.save(); ctx.strokeStyle='rgba(100,200,255,0.2)'; ctx.lineWidth=1; ctx.setLineDash([3,4]);
+  ctx.beginPath(); ctx.arc(cx,cy,SCALE,0,2*Math.PI); ctx.stroke(); ctx.restore();
+  // Grid ticks
+  ctx.save(); ctx.fillStyle='rgba(180,180,255,0.35)'; ctx.font='10px sans-serif';
+  ctx.fillText('1',cx+SCALE-4,cy+14); ctx.fillText('-1',cx-SCALE-6,cy+14);
+  ctx.fillText('i',cx+5,cy-SCALE+4); ctx.fillText('-i',cx+5,cy+SCALE+4); ctx.restore();
+  // Point position
+  const px = cx + r*SCALE*Math.cos(theta);
+  const py = cy - r*SCALE*Math.sin(theta);
+  // Angle arc
+  const arcR = 30;
+  ctx.save(); ctx.strokeStyle='#fbbf24'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cy,arcR,0,-theta,theta<0); ctx.stroke(); ctx.restore();
+  // θ label
+  const midA = theta/2;
+  ctx.save(); ctx.fillStyle='#fbbf24'; ctx.font='bold 12px sans-serif';
+  ctx.fillText('θ', cx+arcR*Math.cos(midA)+6, cy-arcR*Math.sin(midA)-2); ctx.restore();
+  // Dashed projection lines
+  ctx.save(); ctx.setLineDash([4,3]); ctx.lineWidth=1.5;
+  ctx.strokeStyle='#60a5fa';  // real part
+  ctx.beginPath(); ctx.moveTo(px,cy); ctx.lineTo(px,py); ctx.stroke();
+  ctx.strokeStyle='#f87171';  // imag part
+  ctx.beginPath(); ctx.moveTo(cx,py); ctx.lineTo(px,py); ctx.stroke(); ctx.restore();
+  // Projection labels
+  ctx.save(); ctx.font='11px sans-serif';
+  ctx.fillStyle='#f87171'; ctx.fillText('b=r sinθ', cx+5, py+(cy-py)/2);
+  ctx.fillStyle='#60a5fa'; ctx.fillText('a=r cosθ', px+(cx-px)/2-24, cy+14); ctx.restore();
+  // Vector arrow
+  arrow(ctx,cx,cy,px,py,'#4ade80',2.5);
+  // r label
+  ctx.save(); ctx.fillStyle='#4ade80'; ctx.font='bold 12px sans-serif';
+  ctx.fillText('r', (cx+px)/2+4, (cy+py)/2-6); ctx.restore();
+  // Point dot
+  ctx.save(); ctx.fillStyle='#4ade80';
+  ctx.beginPath(); ctx.arc(px,py,5,0,2*Math.PI); ctx.fill(); ctx.restore();
+  // z label
+  ctx.save(); ctx.fillStyle='#4ade80'; ctx.font='bold 12px sans-serif';
+  ctx.fillText('z', px+8, py-6); ctx.restore();
+}
+
+function updateCxMul(){
+  if(!cxReady) return;
+  const phi = d2r(+document.getElementById('cxPhiSlider').value);
+  document.getElementById('cxPhiLabel').textContent = r2d(phi).toFixed(0)+'°';
+  drawCxMul(phi);
+}
+
+function drawCxMul(phi){
+  const {ctx,w,h} = setupCanvas('cxMulCanvas');
+  const cx=w/2, cy=h/2, SCALE=108;
+  ctx.clearRect(0,0,w,h);
+  // Axes
+  ctx.save(); ctx.strokeStyle='rgba(180,180,255,0.3)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(w,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,h); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.fillStyle='rgba(180,180,255,0.45)'; ctx.font='11px sans-serif';
+  ctx.fillText('Re',w-22,cy-6); ctx.fillText('Im',cx+6,14); ctx.restore();
+  // Unit circle
+  ctx.save(); ctx.strokeStyle='rgba(100,200,255,0.3)'; ctx.lineWidth=1.5; ctx.setLineDash([3,4]);
+  ctx.beginPath(); ctx.arc(cx,cy,SCALE,0,2*Math.PI); ctx.stroke(); ctx.restore();
+  // Fixed z at angle 30°, radius 0.7
+  const zAng = d2r(30), zR = 0.72;
+  const zx = cx + zR*SCALE*Math.cos(zAng), zy = cy - zR*SCALE*Math.sin(zAng);
+  // Rotator e^(iphi) on unit circle
+  const ex = cx + SCALE*Math.cos(phi), ey = cy - SCALE*Math.sin(phi);
+  // Product z * e^(iphi): r same, angle = zAng + phi
+  const pAng = zAng + phi;
+  const px = cx + zR*SCALE*Math.cos(pAng), py = cy - zR*SCALE*Math.sin(pAng);
+  // phi arc (yellow) showing rotation
+  ctx.save(); ctx.strokeStyle='#fbbf24'; ctx.lineWidth=2.5; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.arc(cx,cy,SCALE*zR,-(zAng),-pAng,true); ctx.stroke();
+  ctx.restore();
+  // Small phi arc at center
+  ctx.save(); ctx.strokeStyle='#fbbf24'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cy,28,0,-phi,true); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.fillStyle='#fbbf24'; ctx.font='bold 11px sans-serif';
+  ctx.fillText('φ', cx+32, cy-10); ctx.restore();
+  // Rotator arrow (purple)
+  arrow(ctx,cx,cy,ex,ey,'#a78bfa',2);
+  ctx.save(); ctx.fillStyle='#a78bfa'; ctx.font='bold 11px sans-serif';
+  ctx.fillText('e^(iφ)',ex+6,ey-4); ctx.restore();
+  // z arrow (blue)
+  arrow(ctx,cx,cy,zx,zy,'#60a5fa',2.5);
+  ctx.save(); ctx.fillStyle='#60a5fa'; ctx.font='bold 12px sans-serif';
+  ctx.fillText('z',zx+6,zy-4); ctx.restore();
+  // Product arrow (green)
+  arrow(ctx,cx,cy,px,py,'#4ade80',2.5);
+  ctx.save(); ctx.fillStyle='#4ade80'; ctx.font='bold 12px sans-serif';
+  ctx.fillText('e^(iφ)·z',px+6,py-4); ctx.restore();
+  // Dots
+  [[zx,zy,'#60a5fa'],[ex,ey,'#a78bfa'],[px,py,'#4ade80']].forEach(([x,y,c])=>{
+    ctx.save(); ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI); ctx.fill(); ctx.restore();
+  });
+}
+
+// ============================================================
+// ============================================================
+// 1.8  Chapter 1 Summary Animation  (sec8)
+// ============================================================
+const SUMMARY_PHASES = [
+  {
+    title: '① 弧度制 × 單位圓',
+    desc: '角度 θ 是弧長與半徑之比。單位圓上的點 (cosθ, sinθ) 定義了三角函數——這是一切的起點。',
+    color: '#60a5fa'
+  },
+  {
+    title: '② 複數平面：數字有了方向',
+    desc: '複數 z = cosθ + i sinθ 把角度和數字合為一體。乘以複數 = 縮放 + 旋轉，輻角相加。',
+    color: '#a78bfa'
+  },
+  {
+    title: '③ 歐拉公式：e^(iθ) = cosθ + i sinθ',
+    desc: '把 iθ 代入 e^x 的泰勒展開，實部虛部自然分離。e^(iθ) 是單位圓上角度為 θ 的點。',
+    color: '#4ade80'
+  },
+  {
+    title: '④ 加法公式 = 旋轉合成',
+    desc: '旋轉 α 後再旋轉 β，等於旋轉 α+β。用複數乘法展開，左右比較實部虛部，加法公式自然得出。',
+    color: '#fb923c'
+  }
+];
+
+let summaryPhase = 0;
+let summaryT = 0;          // time within phase, seconds
+let summaryPlaying = true;
+let summaryLastTs = null;
+let summaryRAF = null;
+let summary1Ready = false;
+
+function initSummary1(){
+  summary1Ready = true;
+  buildSummaryDots();
+  updateSummaryMeta();
+  summaryLastTs = null;
+  summaryRAF = requestAnimationFrame(summaryLoop);
+}
+
+function buildSummaryDots(){
+  const c = document.getElementById('summaryDots');
+  if(!c) return;
+  c.innerHTML = '';
+  SUMMARY_PHASES.forEach((_,i) => {
+    const d = document.createElement('div');
+    d.style.cssText = `width:10px;height:10px;border-radius:50%;cursor:pointer;
+      background:${i===summaryPhase?SUMMARY_PHASES[i].color:'#334155'};
+      border:2px solid ${SUMMARY_PHASES[i].color};transition:background 0.3s;`;
+    d.onclick = () => { summaryPhase=i; summaryT=0; updateSummaryMeta(); buildSummaryDots(); };
+    c.appendChild(d);
+  });
+}
+
+function updateSummaryMeta(){
+  const p = SUMMARY_PHASES[summaryPhase];
+  const t = document.getElementById('summaryPhaseTitle');
+  const d = document.getElementById('summaryPhaseDesc');
+  if(t) t.textContent = p.title;
+  if(d) d.textContent = p.desc;
+  if(t) t.style.color = p.color;
+}
+
+function toggleSummaryAnim(){
+  summaryPlaying = !summaryPlaying;
+  const btn = document.getElementById('summaryPlayBtn');
+  if(btn) btn.textContent = summaryPlaying ? '⏸ 暫停' : '▶ 播放';
+  if(summaryPlaying){ summaryLastTs=null; summaryRAF=requestAnimationFrame(summaryLoop); }
+}
+function nextSummaryPhase(){ summaryPhase=(summaryPhase+1)%SUMMARY_PHASES.length; summaryT=0; updateSummaryMeta(); buildSummaryDots(); }
+function prevSummaryPhase(){ summaryPhase=(summaryPhase+SUMMARY_PHASES.length-1)%SUMMARY_PHASES.length; summaryT=0; updateSummaryMeta(); buildSummaryDots(); }
+
+function summaryLoop(ts){
+  if(!summary1Ready){ summaryRAF=requestAnimationFrame(summaryLoop); return; }
+  if(summaryPlaying){
+    if(summaryLastTs===null) summaryLastTs=ts;
+    const dt=(ts-summaryLastTs)/1000;
+    summaryLastTs=ts;
+    summaryT+=dt;
+    if(summaryT>5){ summaryT=0; summaryPhase=(summaryPhase+1)%SUMMARY_PHASES.length; updateSummaryMeta(); buildSummaryDots(); }
+  } else { summaryLastTs=null; }
+  drawSummaryPhase(summaryPhase, summaryT);
+  summaryRAF=requestAnimationFrame(summaryLoop);
+}
+
+function drawSummaryPhase(phase, t){
+  const cv = document.getElementById('summaryCanvas');
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Progress bar at top
+  const progress = Math.min(t/5, 1);
+  ctx.save();
+  ctx.fillStyle='#1e293b'; ctx.fillRect(0,0,W,6);
+  ctx.fillStyle=SUMMARY_PHASES[phase].color;
+  ctx.fillRect(0,0,W*progress,6);
+  ctx.restore();
+
+  if(phase===0) drawSummaryP0(ctx,W,H,t);
+  if(phase===1) drawSummaryP1(ctx,W,H,t);
+  if(phase===2) drawSummaryP2(ctx,W,H,t);
+  if(phase===3) drawSummaryP3(ctx,W,H,t);
+}
+
+// ── Phase 0: Unit circle + cosθ/sinθ animation ──────────────────────────────
+function drawSummaryP0(ctx,W,H,t){
+  const cx=W/2, cy=H/2+10, R=120;
+  // Axes
+  ctx.save(); ctx.strokeStyle='rgba(180,180,255,0.25)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(20,cy); ctx.lineTo(W-20,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,20); ctx.lineTo(cx,H-20); ctx.stroke(); ctx.restore();
+  // Unit circle
+  ctx.save(); ctx.strokeStyle='rgba(100,180,255,0.4)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,2*Math.PI); ctx.stroke(); ctx.restore();
+  // Animated angle
+  const th = (t*0.7) % (2*Math.PI);
+  // Sweep fill
+  ctx.save(); ctx.fillStyle='rgba(96,165,250,0.08)';
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,R,0,-th,true); ctx.closePath(); ctx.fill(); ctx.restore();
+  // θ arc
+  ctx.save(); ctx.strokeStyle='#fbbf24'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cy,38,0,-th,true); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.fillStyle='#fbbf24'; ctx.font='bold 13px sans-serif';
+  ctx.fillText('θ', cx+42,cy-8); ctx.restore();
+  // Point
+  const px=cx+R*Math.cos(th), py=cy-R*Math.sin(th);
+  // Projections
+  ctx.save(); ctx.setLineDash([4,3]); ctx.lineWidth=1.5;
+  ctx.strokeStyle='#60a5fa'; ctx.beginPath(); ctx.moveTo(px,cy); ctx.lineTo(px,py); ctx.stroke();
+  ctx.strokeStyle='#f87171'; ctx.beginPath(); ctx.moveTo(cx,py); ctx.lineTo(px,py); ctx.stroke();
+  ctx.restore();
+  // Labels
+  ctx.save(); ctx.font='12px sans-serif';
+  ctx.fillStyle='#60a5fa'; ctx.fillText('cosθ', (cx+px)/2-16, cy+16);
+  ctx.fillStyle='#f87171'; ctx.fillText('sinθ', cx-42, (cy+py)/2+4);
+  ctx.restore();
+  // Arrow and dot
+  arrow(ctx,cx,cy,px,py,'#4ade80',2.5);
+  ctx.save(); ctx.fillStyle='#4ade80'; ctx.beginPath(); ctx.arc(px,py,6,0,2*Math.PI); ctx.fill(); ctx.restore();
+  // Title
+  ctx.save(); ctx.fillStyle='#60a5fa'; ctx.font='bold 14px sans-serif';
+  ctx.fillText('單位圓定義 cos θ 與 sin θ', 14, 30); ctx.restore();
+}
+
+// ── Phase 1: Complex plane + rotating z ─────────────────────────────────────
+function drawSummaryP1(ctx,W,H,t){
+  const cx=W/2, cy=H/2+10, R=110;
+  ctx.save(); ctx.strokeStyle='rgba(180,180,255,0.25)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(20,cy); ctx.lineTo(W-20,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,20); ctx.lineTo(cx,H-20); ctx.stroke(); ctx.restore();
+  // Axis labels
+  ctx.save(); ctx.fillStyle='rgba(180,180,255,0.45)'; ctx.font='12px sans-serif';
+  ctx.fillText('Re', W-32, cy-6); ctx.fillText('Im', cx+6, 24); ctx.restore();
+  // Unit circle
+  ctx.save(); ctx.strokeStyle='rgba(167,139,250,0.4)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,2*Math.PI); ctx.stroke(); ctx.restore();
+  const th=(t*0.8)%(2*Math.PI);
+  // z1 and z2 (fixed angles)
+  const a1=d2r(40), a2=th;
+  const z1x=cx+R*0.72*Math.cos(a1), z1y=cy-R*0.72*Math.sin(a1);
+  const ex=cx+R*Math.cos(a2), ey=cy-R*Math.sin(a2);
+  const prAng=a1+a2, prR=R*0.72;
+  const prx=cx+prR*Math.cos(prAng), pry=cy-prR*Math.sin(prAng);
+  // φ arc
+  ctx.save(); ctx.strokeStyle='#fbbf24'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cy,32,0,-a2,true); ctx.stroke(); ctx.restore();
+  arrow(ctx,cx,cy,ex,ey,'#a78bfa',2);
+  arrow(ctx,cx,cy,z1x,z1y,'#fbbf24',2.5);
+  arrow(ctx,cx,cy,prx,pry,'#4ade80',2.5);
+  [[ex,ey,'#a78bfa'],[z1x,z1y,'#fbbf24'],[prx,pry,'#4ade80']].forEach(([x,y,c])=>{
+    ctx.save(); ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,y,5,0,2*Math.PI); ctx.fill(); ctx.restore();
+  });
+  ctx.save(); ctx.font='11px sans-serif';
+  ctx.fillStyle='#a78bfa'; ctx.fillText('e^(iφ)', ex+6, ey-4);
+  ctx.fillStyle='#fbbf24'; ctx.fillText('z', z1x+6, z1y-4);
+  ctx.fillStyle='#4ade80'; ctx.fillText('e^(iφ)·z', prx+6, pry-4);
+  ctx.restore();
+  ctx.save(); ctx.fillStyle='#a78bfa'; ctx.font='bold 14px sans-serif';
+  ctx.fillText('複數乘法 = 旋轉（輻角相加）', 14, 30); ctx.restore();
+}
+
+// ── Phase 2: Euler spiral → unit circle ─────────────────────────────────────
+function drawSummaryP2(ctx,W,H,t){
+  const cx=W/2, cy=H/2+20, R=115;
+  ctx.save(); ctx.strokeStyle='rgba(180,180,255,0.2)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(20,cy); ctx.lineTo(W-20,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,20); ctx.lineTo(cx,H-20); ctx.stroke(); ctx.restore();
+  // Unit circle
+  ctx.save(); ctx.strokeStyle='rgba(74,222,128,0.3)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,2*Math.PI); ctx.stroke(); ctx.restore();
+  // Trace e^(iθ) for θ in [0, current]
+  const maxTh = Math.min(t*1.3, 2*Math.PI);
+  ctx.save(); ctx.strokeStyle='#4ade80'; ctx.lineWidth=2.5;
+  ctx.beginPath();
+  for(let i=0;i<=200;i++){
+    const th=i/200*maxTh;
+    const x=cx+R*Math.cos(th), y=cy-R*Math.sin(th);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke(); ctx.restore();
+  // Moving dot
+  const th=maxTh;
+  const px=cx+R*Math.cos(th), py=cy-R*Math.sin(th);
+  ctx.save(); ctx.fillStyle='#4ade80'; ctx.beginPath(); ctx.arc(px,py,7,0,2*Math.PI); ctx.fill(); ctx.restore();
+  // Special points
+  [[1,0,'1'],[0,1,'i'],[-1,0,'-1'],[0,-1,'-i']].forEach(([cos,sin,lbl])=>{
+    const x=cx+R*cos, y=cy-R*sin;
+    ctx.save(); ctx.fillStyle='rgba(251,146,60,0.7)'; ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI); ctx.fill();
+    ctx.fillStyle='#fb923c'; ctx.font='11px sans-serif'; ctx.fillText(lbl,x+5,y-4); ctx.restore();
+  });
+  // Formula overlay (fade in after 2s)
+  const alpha=Math.max(0,Math.min(1,(t-2)/1));
+  ctx.save(); ctx.globalAlpha=alpha; ctx.fillStyle='#4ade80'; ctx.font='bold 15px sans-serif';
+  ctx.fillText('e^(iθ) = cosθ + i sinθ', 18, H-22); ctx.restore();
+  ctx.save(); ctx.fillStyle='#4ade80'; ctx.font='bold 14px sans-serif';
+  ctx.fillText('歐拉公式：指數連結三角', 14, 30); ctx.restore();
+}
+
+// ── Phase 3: Addition formula as rotation composition ───────────────────────
+function drawSummaryP3(ctx,W,H,t){
+  const cx=W/2, cy=H/2+10, R=115;
+  ctx.save(); ctx.strokeStyle='rgba(180,180,255,0.2)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(20,cy); ctx.lineTo(W-20,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,20); ctx.lineTo(cx,H-20); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.strokeStyle='rgba(251,146,60,0.3)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,2*Math.PI); ctx.stroke(); ctx.restore();
+  // α oscillates, β fixed
+  const alpha = d2r(30 + 20*Math.sin(t*0.8));
+  const beta  = d2r(45);
+  const sum   = alpha + beta;
+  // α arc (purple)
+  ctx.save(); ctx.strokeStyle='#a78bfa'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(cx,cy,42,0,-alpha,true); ctx.stroke(); ctx.restore();
+  // β arc (red)
+  ctx.save(); ctx.strokeStyle='#f87171'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(cx,cy,58,-alpha,-(alpha+beta),true); ctx.stroke(); ctx.restore();
+  // sum arc (orange dashed)
+  ctx.save(); ctx.strokeStyle='#fb923c'; ctx.lineWidth=2; ctx.setLineDash([5,3]);
+  ctx.beginPath(); ctx.arc(cx,cy,26,0,-sum,true); ctx.stroke(); ctx.restore();
+  // vectors
+  const pa=[cx+R*Math.cos(alpha), cy-R*Math.sin(alpha)];
+  const ps=[cx+R*Math.cos(sum),   cy-R*Math.sin(sum)];
+  arrow(ctx,cx,cy,pa[0],pa[1],'#a78bfa',2.5);
+  arrow(ctx,cx,cy,ps[0],ps[1],'#fb923c',2.5);
+  // sin(α+β) line
+  ctx.save(); ctx.strokeStyle='#4ade80'; ctx.lineWidth=2; ctx.setLineDash([4,2]);
+  ctx.beginPath(); ctx.moveTo(ps[0],cy); ctx.lineTo(ps[0],ps[1]); ctx.stroke(); ctx.restore();
+  // Labels
+  ctx.save(); ctx.font='bold 11px sans-serif';
+  ctx.fillStyle='#a78bfa'; ctx.fillText('α='+r2d(alpha).toFixed(0)+'°', cx+46,cy-6);
+  ctx.fillStyle='#f87171'; ctx.fillText('β='+r2d(beta).toFixed(0)+'°',  cx+62,cy-22);
+  ctx.fillStyle='#fb923c'; ctx.fillText('α+β',cx+28,cy+20);
+  ctx.fillStyle='#4ade80'; ctx.fillText('sin(α+β)',ps[0]+5,cy+(ps[1]-cy)/2);
+  ctx.restore();
+  const al=Math.max(0,Math.min(1,(t-2)/1.2));
+  ctx.save(); ctx.globalAlpha=al; ctx.fillStyle='#fb923c'; ctx.font='bold 13px sans-serif';
+  ctx.fillText('sin(α+β)=sinα cosβ+cosα sinβ', 10, H-22); ctx.restore();
+  ctx.save(); ctx.fillStyle='#fb923c'; ctx.font='bold 14px sans-serif';
+  ctx.fillText('加法公式 = 旋轉的合成', 14, 30); ctx.restore();
+}
+
+// ============================================================
+// 1.7  Euler's Formula — unit circle & rotation canvases (sec7)
+// ============================================================
+let eulerReady = false;
+function initEuler(){ eulerReady=true; updateEuler(); }
+
+function updateEuler(){
+  if(!eulerReady) return;
+  const raw = +document.getElementById('eulerThSlider').value; // 0..628  (×0.01 rad)
+  const th = raw / 100;
+  const deg = (th * 180 / Math.PI).toFixed(1);
+  document.getElementById('eulerThLabel').textContent = deg + '°';
+  document.getElementById('eulerCosVal').textContent = Math.cos(th).toFixed(4);
+  document.getElementById('eulerSinVal').textContent = Math.sin(th).toFixed(4);
+  drawEulerUnit(th);
+  drawEulerRot(th);
+}
+
+function drawEulerUnit(th){
+  const {ctx,w,h} = setupCanvas('eulerUnitCanvas');
+  const cx=w/2, cy=h/2, R=115;
+  ctx.clearRect(0,0,w,h);
+
+  // Axes
+  ctx.save(); ctx.strokeStyle='rgba(180,180,255,0.3)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(w,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,h); ctx.stroke(); ctx.restore();
+
+  // Axis labels
+  ctx.save(); ctx.fillStyle='rgba(180,180,255,0.5)'; ctx.font='11px sans-serif';
+  ctx.fillText('Re', w-22, cy-6); ctx.fillText('Im', cx+6, 14); ctx.restore();
+
+  // Unit circle
+  ctx.save(); ctx.strokeStyle='rgba(100,200,255,0.35)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,2*Math.PI); ctx.stroke(); ctx.restore();
+
+  // Special axis labels: 1, i, -1, -i
+  ctx.save(); ctx.fillStyle='rgba(200,200,255,0.6)'; ctx.font='12px sans-serif';
+  ctx.fillText('1',  cx+R+4, cy+14);
+  ctx.fillText('-1', cx-R-18, cy+14);
+  ctx.fillText('i',  cx+5, cy-R-4);
+  ctx.fillText('-i', cx+5, cy+R+14);
+  ctx.restore();
+
+  // Sweep arc (faint trail from 0 to th)
+  ctx.save(); ctx.strokeStyle='rgba(100,200,100,0.2)'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,-th,th>0); ctx.stroke(); ctx.restore();
+
+  // θ arc label
+  const arcR=32;
+  ctx.save(); ctx.strokeStyle='#fbbf24'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cy,arcR,0,-th,th>0); ctx.stroke(); ctx.restore();
+  const midA=th/2;
+  ctx.save(); ctx.fillStyle='#fbbf24'; ctx.font='bold 12px sans-serif';
+  ctx.fillText('θ', cx+arcR*Math.cos(midA)+8, cy-arcR*Math.sin(midA)+4); ctx.restore();
+
+  // Current point
+  const px=cx+R*Math.cos(th), py=cy-R*Math.sin(th);
+
+  // Projection dashed lines
+  ctx.save(); ctx.setLineDash([4,3]); ctx.lineWidth=1.5;
+  ctx.strokeStyle='#60a5fa';  // cos — to real axis
+  ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,cy); ctx.stroke();
+  ctx.strokeStyle='#f87171';  // sin — to imag axis
+  ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(cx,py); ctx.stroke(); ctx.restore();
+
+  // Projection value labels
+  ctx.save(); ctx.font='11px sans-serif';
+  ctx.fillStyle='#60a5fa'; ctx.fillText('cosθ', (cx+px)/2-12, cy+14);
+  ctx.fillStyle='#f87171'; ctx.fillText('sinθ', cx-38, (cy+py)/2+4); ctx.restore();
+
+  // Radius arrow
+  arrow(ctx,cx,cy,px,py,'#4ade80',2.5);
+
+  // Point dot
+  ctx.save(); ctx.fillStyle='#4ade80';
+  ctx.beginPath(); ctx.arc(px,py,6,0,2*Math.PI); ctx.fill(); ctx.restore();
+
+  // Label: e^{iθ}
+  ctx.save(); ctx.fillStyle='#4ade80'; ctx.font='bold 13px sans-serif';
+  const lx=px>cx?px+8:px-60, ly=py<cy?py-8:py+18;
+  ctx.fillText('e^(iθ)', lx, ly); ctx.restore();
+
+  // Special point highlight at π
+  const piPx=cx-R, piPy=cy;
+  ctx.save(); ctx.fillStyle='rgba(251,146,60,0.8)';
+  ctx.beginPath(); ctx.arc(piPx,piPy,4,0,2*Math.PI); ctx.fill();
+  ctx.fillStyle='#fb923c'; ctx.font='10px sans-serif';
+  ctx.fillText('e^(iπ)=-1', piPx-36, piPy-8); ctx.restore();
+}
+
+function drawEulerRot(th){
+  const {ctx,w,h} = setupCanvas('eulerRotCanvas');
+  const cx=w/2, cy=h/2, R=110;
+  ctx.clearRect(0,0,w,h);
+
+  // Axes
+  ctx.save(); ctx.strokeStyle='rgba(180,180,255,0.3)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(w,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,h); ctx.stroke(); ctx.restore();
+
+  // Unit circle
+  ctx.save(); ctx.strokeStyle='rgba(100,200,255,0.25)'; ctx.lineWidth=1.5; ctx.setLineDash([3,4]);
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,2*Math.PI); ctx.stroke(); ctx.restore();
+
+  // Fixed z (yellow) at angle 35°, radius 0.65
+  const zAng=d2r(35), zRad=0.65;
+  const zx=cx+zRad*R*Math.cos(zAng), zy=cy-zRad*R*Math.sin(zAng);
+
+  // Rotated z·e^(iθ) (green)
+  const rAng=zAng+th;
+  const rx=cx+zRad*R*Math.cos(rAng), ry=cy-zRad*R*Math.sin(rAng);
+
+  // e^(iθ) on unit circle (purple)
+  const ex=cx+R*Math.cos(th), ey=cy-R*Math.sin(th);
+
+  // Arc showing rotation from z to z·e^(iθ)
+  ctx.save(); ctx.strokeStyle='rgba(251,191,36,0.4)'; ctx.lineWidth=2; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.arc(cx,cy,zRad*R,-zAng,-(zAng+th),true); ctx.stroke(); ctx.restore();
+
+  // θ arc at center
+  ctx.save(); ctx.strokeStyle='#fbbf24'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cy,28,0,-th,th>0); ctx.stroke(); ctx.restore();
+  const ma=th/2;
+  ctx.save(); ctx.fillStyle='#fbbf24'; ctx.font='bold 11px sans-serif';
+  ctx.fillText('θ', cx+32*Math.cos(ma)+5, cy-32*Math.sin(ma)+4); ctx.restore();
+
+  // Arrows
+  arrow(ctx,cx,cy,ex,ey,'#a78bfa',2);
+  arrow(ctx,cx,cy,zx,zy,'#fbbf24',2.5);
+  arrow(ctx,cx,cy,rx,ry,'#4ade80',2.5);
+
+  // Dots
+  [[ex,ey,'#a78bfa'],[zx,zy,'#fbbf24'],[rx,ry,'#4ade80']].forEach(([x,y,c])=>{
+    ctx.save(); ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,y,5,0,2*Math.PI); ctx.fill(); ctx.restore();
+  });
+
+  // Labels
+  ctx.save(); ctx.font='bold 11px sans-serif';
+  ctx.fillStyle='#a78bfa'; ctx.fillText('e^(iθ)', ex+6, ey-4);
+  ctx.fillStyle='#fbbf24'; ctx.fillText('z', zx+6, zy-4);
+  ctx.fillStyle='#4ade80'; ctx.fillText('e^(iθ)·z', rx+6, ry-4);
+  ctx.restore();
+
+  // "same |z|" annotation
+  ctx.save(); ctx.strokeStyle='rgba(100,200,255,0.4)'; ctx.lineWidth=1; ctx.setLineDash([2,3]);
+  ctx.beginPath(); ctx.arc(cx,cy,zRad*R,0,2*Math.PI); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.fillStyle='rgba(100,200,255,0.5)'; ctx.font='10px sans-serif';
+  ctx.fillText('|z| 不變', cx+zRad*R+4, cy+14); ctx.restore();
+}
+
+// ============================================================
+// 1.6  Natural constant e  (sec6)
+// ============================================================
+let eReady = false;
+function initE(){ eReady=true; updateE(); updateETaylor(); }
+
+function updateE(){
+  if(!eReady) return;
+  const xRaw = +document.getElementById('eXSlider').value;  // -200..200
+  const x = xRaw / 100;
+  document.getElementById('eXLabel').textContent = x.toFixed(2);
+  const val = Math.exp(x);
+  document.getElementById('eValDisplay').textContent = val.toFixed(4);
+  document.getElementById('eSlopeDisplay').textContent = val.toFixed(4);
+  document.getElementById('eDiffDisplay').textContent = (0).toFixed(4);
+  drawECanvas(x);
+}
+
+function drawECanvas(xMark){
+  const {ctx,w,h} = setupCanvas('eCanvas');
+  ctx.clearRect(0,0,w,h);
+  const XMIN=-2.2, XMAX=2.2, YMIN=-0.3, YMAX=8.5;
+  const toS = (x,y) => [(x-XMIN)/(XMAX-XMIN)*w, h-(y-YMIN)/(YMAX-YMIN)*h];
+
+  // Axes
+  const [ax0,ay0]=toS(0,0), [ax1,ay1]=toS(XMAX,0), [axn,ayn]=toS(XMIN,0);
+  const [bx0,by0]=toS(0,0), [bx1,by1]=toS(0,YMAX);
+  ctx.save(); ctx.strokeStyle='rgba(180,180,255,0.35)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(axn,ay0); ctx.lineTo(ax1,ay1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx0,h); ctx.lineTo(bx1,by1); ctx.stroke(); ctx.restore();
+
+  // Axis labels
+  ctx.save(); ctx.fillStyle='rgba(180,180,255,0.5)'; ctx.font='11px sans-serif';
+  ctx.fillText('x', ax1-10, ay0+14); ctx.fillText('y', bx0+6, by1+4);
+  // Tick marks
+  for(let i=-2;i<=2;i++){
+    const [tx,ty]=toS(i,0);
+    ctx.fillText(i, tx-4, ty+14);
+    ctx.beginPath(); ctx.moveTo(tx,ty-3); ctx.lineTo(tx,ty+3); ctx.strokeStyle='rgba(180,180,255,0.4)'; ctx.lineWidth=1; ctx.stroke();
+  }
+  for(let i=1;i<=8;i+=2){
+    const [tx,ty]=toS(0,i);
+    ctx.fillText(i, tx-16, ty+4);
+  }
+  ctx.restore();
+
+  // e^x curve (orange)
+  ctx.save(); ctx.strokeStyle='#fb923c'; ctx.lineWidth=2.5;
+  ctx.beginPath();
+  let first=true;
+  for(let px=0;px<w;px++){
+    const x=XMIN+(px/w)*(XMAX-XMIN);
+    const y=Math.exp(x);
+    if(y>YMAX+1)continue;
+    const [sx,sy]=toS(x,y);
+    first?(ctx.moveTo(sx,sy),first=false):ctx.lineTo(sx,sy);
+  }
+  ctx.stroke(); ctx.restore();
+
+  // Mark x=1 reference: e^1=e
+  const [ex1,ey1]=toS(1,Math.E);
+  ctx.save(); ctx.strokeStyle='rgba(251,146,60,0.3)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(ex1,h); ctx.lineTo(ex1,ey1); ctx.lineTo(0,ey1); ctx.stroke();
+  ctx.fillStyle='rgba(251,146,60,0.7)'; ctx.font='11px sans-serif';
+  ctx.fillText('e≈2.718', 4, ey1-4); ctx.restore();
+
+  // Current point & tangent
+  const xM = Math.max(XMIN+0.1, Math.min(XMAX-0.1, xMark));
+  const yM = Math.exp(xM);
+  if(yM<YMAX+0.5){
+    const [px,py]=toS(xM,yM);
+    // Tangent line: y - yM = yM*(x - xM)  →  y = yM*x + yM*(1-xM)
+    const slope=yM;
+    const x0T=XMIN, y0T=slope*(x0T-xM)+yM;
+    const x1T=XMAX, y1T=slope*(x1T-xM)+yM;
+    const [tx0,ty0]=toS(x0T,y0T);
+    const [tx1,ty1]=toS(x1T,y1T);
+    ctx.save(); ctx.strokeStyle='#4ade80'; ctx.lineWidth=2; ctx.setLineDash([5,3]);
+    ctx.beginPath(); ctx.moveTo(tx0,ty0); ctx.lineTo(tx1,ty1); ctx.stroke(); ctx.restore();
+
+    // Vertical dashed to x-axis
+    ctx.save(); ctx.strokeStyle='rgba(100,200,255,0.4)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,ay0); ctx.stroke(); ctx.restore();
+
+    // Point dot
+    ctx.save(); ctx.fillStyle='#4ade80';
+    ctx.beginPath(); ctx.arc(px,py,5,0,2*Math.PI); ctx.fill(); ctx.restore();
+
+    // Labels
+    ctx.save(); ctx.fillStyle='#4ade80'; ctx.font='bold 11px sans-serif';
+    const labelX = px>w*0.7 ? px-110 : px+8;
+    ctx.fillText(`e^${xM.toFixed(2)}=${yM.toFixed(3)}`, labelX, py-8);
+    ctx.fillText(`slope=${slope.toFixed(3)}`, labelX, py+14);
+    ctx.restore();
+  }
+
+  // e^x label
+  ctx.save(); ctx.fillStyle='#fb923c'; ctx.font='bold 13px sans-serif';
+  ctx.fillText('y = eˣ', toS(1.6,Math.exp(1.6))[0]-30, toS(1.6,Math.exp(1.6))[1]-10);
+  ctx.restore();
+}
+
+function updateETaylor(){
+  if(!eReady) return;
+  const N = +document.getElementById('eTaylorSlider').value;
+  document.getElementById('eTaylorNLabel').textContent = N;
+  // Build formula string
+  const terms = ['1'];
+  for(let k=1;k<=N;k++){
+    const fact = [1,1,2,6,24,120,720,5040,40320][k];
+    if(k===1) terms.push('x');
+    else terms.push(`x^${k}/${fact}`);
+  }
+  document.getElementById('eTaylorFormula').textContent =
+    `T_${N}(x) = ` + terms.join(' + ') + (N<8?' + …':'');
+  drawETaylor(N);
+}
+
+function drawETaylor(N){
+  const {ctx,w,h} = setupCanvas('eTaylorCanvas');
+  ctx.clearRect(0,0,w,h);
+  const XMIN=-2.5, XMAX=2.5, YMIN=-1, YMAX=9;
+  const toS = (x,y) => [(x-XMIN)/(XMAX-XMIN)*w, h-(y-YMIN)/(YMAX-YMIN)*h];
+
+  // Axes
+  ctx.save(); ctx.strokeStyle='rgba(180,180,255,0.3)'; ctx.lineWidth=1;
+  const [ax,ay]=toS(0,0);
+  ctx.beginPath(); ctx.moveTo(0,ay); ctx.lineTo(w,ay); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ax,0); ctx.lineTo(ax,h); ctx.stroke(); ctx.restore();
+
+  // e^x true curve (orange)
+  ctx.save(); ctx.strokeStyle='#fb923c'; ctx.lineWidth=2.5;
+  ctx.beginPath(); let f=true;
+  for(let px=0;px<w;px++){
+    const x=XMIN+(px/w)*(XMAX-XMIN); const y=Math.exp(x);
+    if(y>YMAX+2||y<YMIN-2){f=true;continue;}
+    const [sx,sy]=toS(x,y); f?(ctx.moveTo(sx,sy),f=false):ctx.lineTo(sx,sy);
+  }
+  ctx.stroke(); ctx.restore();
+
+  // Taylor polynomial (cyan)
+  ctx.save(); ctx.strokeStyle='#22d3ee'; ctx.lineWidth=2.5;
+  ctx.beginPath(); f=true;
+  for(let px=0;px<w;px++){
+    const x=XMIN+(px/w)*(XMAX-XMIN);
+    let y=0, xn=1; let fact=1;
+    for(let k=0;k<=N;k++){
+      if(k>0){xn*=x; fact*=k;}
+      y+=xn/fact;
+    }
+    if(y>YMAX+2||y<YMIN-2){f=true;continue;}
+    const [sx,sy]=toS(x,y); f?(ctx.moveTo(sx,sy),f=false):ctx.lineTo(sx,sy);
+  }
+  ctx.stroke(); ctx.restore();
+
+  // Legend
+  ctx.save(); ctx.font='12px sans-serif';
+  ctx.fillStyle='#fb923c'; ctx.fillText('— eˣ (真實值)', 10, 20);
+  ctx.fillStyle='#22d3ee'; ctx.fillText('— 泰勒多項式', 10, 38);
+  ctx.restore();
+}
+
+// 2. Addition Formula
+// ============================================================
+let addReady=false;
+function initAdd(){ addReady=true; updateAdd(); }
+function updateAdd(){
+  if(!addReady)return;
+  const alpha=d2r(+document.getElementById('alphaSlider').value);
+  const beta=d2r(+document.getElementById('betaSlider').value);
+  document.getElementById('alphaLabel').textContent=r2d(alpha).toFixed(0)+'°';
+  document.getElementById('betaLabel').textContent=r2d(beta).toFixed(0)+'°';
+  const sum=alpha+beta;
+  document.getElementById('sinAddVal').textContent=Math.sin(sum).toFixed(4);
+  document.getElementById('sinAddCalc').textContent=(Math.sin(alpha)*Math.cos(beta)+Math.cos(alpha)*Math.sin(beta)).toFixed(4);
+  document.getElementById('cosAddVal').textContent=Math.cos(sum).toFixed(4);
+  document.getElementById('cosAddCalc').textContent=(Math.cos(alpha)*Math.cos(beta)-Math.sin(alpha)*Math.sin(beta)).toFixed(4);
+  drawAdd(alpha,beta);
+  drawCxRot(alpha,beta);
+}
+function drawCxRot(alpha,beta){
+  const cv=document.getElementById('cxRotCanvas');
+  if(!cv)return;
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  const cx=W/2,cy=H/2,R=105;
+  ctx.clearRect(0,0,W,H);
+  // Axes
+  ctx.save();ctx.strokeStyle='rgba(180,180,255,0.25)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.stroke();
+  ctx.restore();
+  // Unit circle
+  ctx.save();ctx.strokeStyle='rgba(180,180,255,0.35)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(cx,cy,R,0,2*Math.PI);ctx.stroke();ctx.restore();
+  const sum=alpha+beta;
+  // Points
+  const z1=[cx+R*Math.cos(alpha), cy-R*Math.sin(alpha)];
+  const z2=[cx+R*Math.cos(beta),  cy-R*Math.sin(beta)];
+  const zp=[cx+R*Math.cos(sum),   cy-R*Math.sin(sum)];
+  // Alpha arc (purple)
+  ctx.save();ctx.strokeStyle='#a78bfa';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(cx,cy,32,0,-alpha,alpha<0);ctx.stroke();
+  ctx.restore();
+  // Beta arc (red) drawn from alpha outward
+  ctx.save();ctx.strokeStyle='#f87171';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(cx,cy,48,-alpha,-(alpha+beta),true);ctx.stroke();
+  ctx.restore();
+  // Sum arc (green, dashed)
+  ctx.save();ctx.strokeStyle='#4ade80';ctx.lineWidth=2;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.arc(cx,cy,22,0,-sum,sum<0);ctx.stroke();ctx.restore();
+  // Radii
+  arrow(ctx,cx,cy,z1[0],z1[1],'#a78bfa',2.5);
+  arrow(ctx,cx,cy,z2[0],z2[1],'#f87171',2.5);
+  arrow(ctx,cx,cy,zp[0],zp[1],'#4ade80',2.5);
+  // Dots
+  [[z1,'#a78bfa'],[z2,'#f87171'],[zp,'#4ade80']].forEach(([p,c])=>{
+    ctx.save();ctx.fillStyle=c;ctx.beginPath();ctx.arc(p[0],p[1],5,0,2*Math.PI);ctx.fill();ctx.restore();
+  });
+  // Labels
+  ctx.save();ctx.font='bold 12px sans-serif';
+  ctx.fillStyle='#a78bfa';ctx.fillText('z₁ (α='+r2d(alpha).toFixed(0)+'°)',z1[0]+7,z1[1]-4);
+  ctx.fillStyle='#f87171';ctx.fillText('z₂ (β='+r2d(beta).toFixed(0)+'°)',z2[0]+7,z2[1]+14);
+  ctx.fillStyle='#4ade80';ctx.fillText('z₁z₂ (α+β='+r2d(sum).toFixed(0)+'°)',zp[0]+7,zp[1]-4);
+  // Arc labels
+  ctx.fillStyle='#a78bfa';ctx.font='11px sans-serif';
+  ctx.fillText('α',cx+35,cy-8);
+  ctx.fillStyle='#f87171';
+  ctx.fillText('β',cx+52,cy-22);
+  ctx.fillStyle='#4ade80';
+  ctx.fillText('α+β',cx+24,cy+18);
+  ctx.restore();
+}
+function drawAdd(alpha,beta){
+  const {ctx,w,h}=setupCanvas('addCanvas');
+  const cx=w/2,cy=h/2,R=130;
+  grid(ctx,cx,cy,R,w,h);
+  ctx.save();ctx.strokeStyle='rgba(180,180,255,0.5)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(cx,cy,R,0,2*Math.PI);ctx.stroke();ctx.restore();
+  const sum=alpha+beta;
+  // Alpha arc
+  ctx.save();ctx.strokeStyle='#a78bfa';ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(cx,cy,50,0,-alpha,true);ctx.stroke();ctx.restore();
+  // Beta arc
+  ctx.save();ctx.strokeStyle='#22d3ee';ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(cx,cy,50,-alpha,-(alpha+beta),true);ctx.stroke();ctx.restore();
+  // Vectors
+  const pa=[cx+R*Math.cos(alpha),cy-R*Math.sin(alpha)];
+  const pb=[cx+R*Math.cos(sum),cy-R*Math.sin(sum)];
+  arrow(ctx,cx,cy,pa[0],pa[1],'#a78bfa',2);
+  arrow(ctx,cx,cy,pb[0],pb[1],'#22d3ee',2);
+  // sin(alpha+beta) line
+  ctx.save();ctx.strokeStyle='#4ade80';ctx.lineWidth=2.5;ctx.setLineDash([4,2]);
+  ctx.beginPath();ctx.moveTo(pb[0],cy);ctx.lineTo(pb[0],pb[1]);ctx.stroke();ctx.restore();
+  // Labels
+  ctx.save();ctx.fillStyle='#a78bfa';ctx.font='bold 12px sans-serif';
+  ctx.fillText('α='+r2d(alpha).toFixed(0)+'°',cx+54,cy-4);
+  ctx.fillStyle='#22d3ee';
+  ctx.fillText('β='+r2d(beta).toFixed(0)+'°',cx+54,cy-18);
+  ctx.fillStyle='#4ade80';
+  ctx.fillText('sin(α+β)',pb[0]+6,cy+(pb[1]-cy)/2);
+  ctx.restore();
+}
+
+// ============================================================
+// 3. Vector Addition
+// ============================================================
+let vecReady=false;
+function initVec(){ vecReady=true; updateVec(); }
+function updateVec(){
+  if(!vecReady)return;
+  const aA=d2r(+document.getElementById('aAng').value);
+  const aM=+document.getElementById('aMag').value;
+  const bA=d2r(+document.getElementById('bAng').value);
+  const bM=+document.getElementById('bMag').value;
+  document.getElementById('aAngLabel').textContent=r2d(aA).toFixed(0)+'°';
+  document.getElementById('aMagLabel').textContent=(aM/30).toFixed(1);
+  document.getElementById('bAngLabel').textContent=r2d(bA).toFixed(0)+'°';
+  document.getElementById('bMagLabel').textContent=(bM/30).toFixed(1);
+  const ax=aM*Math.cos(aA),ay=aM*Math.sin(aA);
+  const bx=bM*Math.cos(bA),by=bM*Math.sin(bA);
+  const sm=Math.sqrt((ax+bx)**2+(ay+by)**2);
+  document.getElementById('sumMag').textContent=(sm/30).toFixed(2);
+  drawVec(ax,ay,bx,by);
+}
+function drawVec(ax,ay,bx,by){
+  const {ctx,w,h}=setupCanvas('vecCanvas');
+  const cx=w/2,cy=h/2;
+  grid(ctx,cx,cy,30,w,h);
+  arrow(ctx,cx,cy,cx+ax,cy-ay,'#60a5fa',3);
+  arrow(ctx,cx,cy,cx+bx,cy-by,'#f87171',3);
+  // b shifted to tip of a (parallelogram)
+  ctx.save();ctx.strokeStyle='rgba(248,113,113,0.3)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+  arrow(ctx,cx+ax,cy-ay,cx+ax+bx,cy-ay-by,'rgba(248,113,113,0.4)',1.5);
+  ctx.restore();
+  arrow(ctx,cx,cy,cx+ax+bx,cy-ay-by,'#4ade80',3);
+  ctx.save();ctx.fillStyle='#60a5fa';ctx.font='bold 13px sans-serif';ctx.fillText('a',cx+ax/2+6,cy-ay/2);
+  ctx.fillStyle='#f87171';ctx.fillText('b',cx+bx/2+6,cy-by/2);
+  ctx.fillStyle='#4ade80';ctx.fillText('a+b',cx+(ax+bx)/2+6,cy-(ay+by)/2);
+  ctx.restore();
+}
+
+// ============================================================
+// 4. Dot Product
+// ============================================================
+let dotReady=false;
+function initDot(){ dotReady=true; updateDot(); }
+function updateDot(){
+  if(!dotReady)return;
+  const deg=+document.getElementById('dotAng').value;
+  const theta=d2r(deg);
+  document.getElementById('dotAngLabel').textContent=deg+'°';
+  document.getElementById('dotTheta').textContent=deg+'°';
+  const aLen=100, bLen=80;
+  const ax=aLen,ay=0;
+  const bx=bLen*Math.cos(theta),by=-bLen*Math.sin(theta);
+  const dot=ax*bx+ay*by;
+  const proj=dot/aLen;
+  document.getElementById('dotVal').textContent=(dot/1000).toFixed(3)+' (scaled)';
+  document.getElementById('projVal').textContent=(proj/100).toFixed(3);
+  drawDot(ax,ay,bx,by,proj);
+}
+function drawDot(ax,ay,bx,by,proj){
+  const {ctx,w,h}=setupCanvas('dotCanvas');
+  const cx=w/2,cy=h/2;
+  grid(ctx,cx,cy,40,w,h);
+  // Projection (yellow dashed line on a-axis)
+  ctx.save();ctx.strokeStyle='#fbbf24';ctx.lineWidth=2;ctx.setLineDash([4,2]);
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+proj,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx+proj,cy);ctx.lineTo(cx+bx,cy+by);ctx.stroke();
+  ctx.restore();
+  // Projection dot
+  ctx.save();ctx.fillStyle='#fbbf24';ctx.beginPath();ctx.arc(cx+proj,cy,5,0,2*Math.PI);ctx.fill();ctx.restore();
+  arrow(ctx,cx,cy,cx+ax,cy+ay,'#60a5fa',3);
+  arrow(ctx,cx,cy,cx+bx,cy+by,'#f87171',3);
+  ctx.save();ctx.fillStyle='#60a5fa';ctx.font='bold 13px sans-serif';ctx.fillText('a',cx+ax+6,cy+4);
+  ctx.fillStyle='#f87171';ctx.fillText('b',cx+bx+6,cy+by+4);
+  ctx.fillStyle='#fbbf24';ctx.fillText('proj',cx+proj/2-10,cy-10);
+  // Angle label
+  ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(cx,cy,30,0,Math.atan2(-by,bx),by<0);ctx.stroke();
+  ctx.fillStyle='#94a3b8';ctx.font='11px sans-serif';
+  const midA=Math.atan2(-by,bx)/2;
+  ctx.fillText('θ',cx+36*Math.cos(midA)-4,cy-36*Math.sin(midA)+4);
+  ctx.restore();
+}
+
+// ============================================================
+// 5. Matrix Transform
+// ============================================================
+let matReady=false;
+function initMat(){ matReady=true; updateMat(); }
+function updateMat(){
+  if(!matReady)return;
+  const a=+document.getElementById('slA').value/100;
+  const b=+document.getElementById('slB').value/100;
+  const c=+document.getElementById('slC').value/100;
+  const d=+document.getElementById('slD').value/100;
+  document.getElementById('matA').textContent=a.toFixed(1);
+  document.getElementById('matB').textContent=b.toFixed(1);
+  document.getElementById('matC').textContent=c.toFixed(1);
+  document.getElementById('matD').textContent=d.toFixed(1);
+  const det=a*d-b*c;
+  const el=document.getElementById('detVal');
+  el.textContent=det.toFixed(3);
+  el.style.color=Math.abs(det)<0.01?'var(--danger)':det>0?'var(--success)':'var(--accent3)';
+  drawMat(a,b,c,d);
+}
+function drawMat(a,b,c,d){
+  const {ctx,w,h}=setupCanvas('matCanvas');
+  const cx=w/2,cy=h/2,sc=40;
+  // Original grid (gray)
+  ctx.save();ctx.strokeStyle='rgba(100,100,150,0.3)';ctx.lineWidth=0.5;
+  for(let i=-5;i<=5;i++){
+    ctx.beginPath();ctx.moveTo(cx+i*sc,0);ctx.lineTo(cx+i*sc,h);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,cy+i*sc);ctx.lineTo(w,cy+i*sc);ctx.stroke();
+  }
+  ctx.restore();
+  // Transformed grid
+  function tx(x,y){return cx+sc*(a*x+b*y);}
+  function ty(x,y){return cy-sc*(c*x+d*y);}
+  ctx.save();ctx.strokeStyle='rgba(124,58,237,0.35)';ctx.lineWidth=0.8;
+  for(let i=-5;i<=5;i++){
+    ctx.beginPath();ctx.moveTo(tx(i,-5),ty(i,-5));ctx.lineTo(tx(i,5),ty(i,5));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(tx(-5,i),ty(-5,i));ctx.lineTo(tx(5,i),ty(5,i));ctx.stroke();
+  }
+  ctx.restore();
+  // Transformed unit square
+  ctx.save();ctx.fillStyle='rgba(124,58,237,0.15)';ctx.strokeStyle='rgba(124,58,237,0.8)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(tx(0,0),ty(0,0));ctx.lineTo(tx(1,0),ty(1,0));
+  ctx.lineTo(tx(1,1),ty(1,1));ctx.lineTo(tx(0,1),ty(0,1));ctx.closePath();
+  ctx.fill();ctx.stroke();ctx.restore();
+  // Basis vectors
+  arrow(ctx,cx,cy,tx(1,0),ty(1,0),'#22d3ee',2.5);
+  arrow(ctx,cx,cy,tx(0,1),ty(0,1),'#f59e0b',2.5);
+  ctx.save();ctx.fillStyle='#22d3ee';ctx.font='bold 12px sans-serif';
+  ctx.fillText('e₁→(a,c)',tx(1,0)+4,ty(1,0)-4);
+  ctx.fillStyle='#f59e0b';ctx.fillText('e₂→(b,d)',tx(0,1)+4,ty(0,1)-4);
+  ctx.restore();
+}
+
+// ============================================================
+// 6. Rotation Matrix
+// ============================================================
+let rotReady=false;
+function initRot(){ rotReady=true; updateRot(); }
+function updateRot(){
+  if(!rotReady)return;
+  const deg=+document.getElementById('rotSlider').value;
+  const theta=d2r(deg);
+  document.getElementById('rotLabel').textContent=deg+'°';
+  const c=Math.cos(theta),s=Math.sin(theta);
+  document.getElementById('r11').textContent=c.toFixed(3);
+  document.getElementById('r12').textContent=(-s).toFixed(3);
+  document.getElementById('r21').textContent=s.toFixed(3);
+  document.getElementById('r22').textContent=c.toFixed(3);
+  document.getElementById('rotDet').textContent=(c*c+s*s).toFixed(4);
+  drawRot(theta);
+}
+function drawRot(theta){
+  const {ctx,w,h}=setupCanvas('rotCanvas');
+  const cx=w/2,cy=h/2,R=120;
+  grid(ctx,cx,cy,40,w,h);
+  // Original vector (fixed)
+  const ox=R*0.8,oy=0;
+  arrow(ctx,cx,cy,cx+ox,cy,'#60a5fa',2.5);
+  ctx.save();ctx.fillStyle='#60a5fa';ctx.font='12px sans-serif';ctx.fillText('原始',cx+ox/2-8,cy-8);ctx.restore();
+  // Rotated vector
+  const rx=ox*Math.cos(theta)-oy*Math.sin(theta);
+  const ry=ox*Math.sin(theta)+oy*Math.cos(theta);
+  arrow(ctx,cx,cy,cx+rx,cy-ry,'#f87171',2.5);
+  ctx.save();ctx.fillStyle='#f87171';ctx.font='12px sans-serif';ctx.fillText('旋轉後',cx+rx/2-8,cy-ry/2-8);ctx.restore();
+  // Angle arc
+  ctx.save();ctx.strokeStyle='rgba(245,158,11,0.6)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(cx,cy,50,0,-theta,theta<0);ctx.stroke();
+  ctx.fillStyle='#fbbf24';ctx.font='11px sans-serif';
+  ctx.fillText('θ='+r2d(theta).toFixed(0)+'°',cx+55,cy-10);
+  ctx.restore();
+}
+
+// ============================================================
+// 7. Eigenvalue
+// ============================================================
+let eigenReady=false;
+function initEigen(){ eigenReady=true; updateEigen(); }
+function updateEigen(){
+  if(!eigenReady)return;
+  const a=+document.getElementById('eigSlA').value/100;
+  const b=+document.getElementById('eigSlB').value/100;
+  const dv=+document.getElementById('eigSlD').value/100;
+  document.getElementById('eigA').textContent=a.toFixed(1);
+  document.getElementById('eigB').textContent=b.toFixed(1);
+  document.getElementById('eigD').textContent=dv.toFixed(1);
+  // Symmetric matrix [[a,b],[b,d]]
+  const tr=a+dv, det=a*dv-b*b;
+  const disc=tr*tr-4*det;
+  if(disc<0){ document.getElementById('eigenvals').textContent='複數（無實數）'; drawEigen(a,b,dv,[],[],[]); return; }
+  const l1=(tr+Math.sqrt(disc))/2, l2=(tr-Math.sqrt(disc))/2;
+  document.getElementById('eigenvals').textContent=l1.toFixed(3)+', '+l2.toFixed(3);
+  // Eigenvectors
+  let v1,v2;
+  if(Math.abs(b)<0.01){v1=[1,0];v2=[0,1];}
+  else { v1=[b,l1-a]; v2=[b,l2-a]; }
+  const n1=Math.sqrt(v1[0]**2+v1[1]**2), n2=Math.sqrt(v2[0]**2+v2[1]**2);
+  v1=[v1[0]/n1,v1[1]/n1]; v2=[v2[0]/n2,v2[1]/n2];
+  drawEigen(a,b,dv,[l1,l2],v1,v2);
+}
+function drawEigen(a,b,dv,ls,v1,v2){
+  const {ctx,w,h}=setupCanvas('eigenCanvas');
+  const cx=w/2,cy=h/2,sc=50;
+  grid(ctx,cx,cy,sc,w,h);
+  // Transform a few sample vectors
+  const samples=[];
+  for(let ang=0;ang<360;ang+=20){
+    const r=d2r(ang),x=Math.cos(r),y=Math.sin(r);
+    const tx=a*x+b*y, ty=b*x+dv*y;
+    samples.push({ox:x,oy:y,tx,ty});
+  }
+  samples.forEach(s=>{
+    ctx.save();ctx.strokeStyle='rgba(148,163,184,0.2)';ctx.lineWidth=1;ctx.setLineDash([2,2]);
+    ctx.beginPath();ctx.moveTo(cx+s.ox*sc,cy-s.oy*sc);ctx.lineTo(cx+s.tx*sc,cy-s.ty*sc);ctx.stroke();ctx.restore();
+  });
+  if(v1.length){
+    const S=120;
+    arrow(ctx,cx-v1[0]*S,cy+v1[1]*S,cx+v1[0]*S,cy-v1[1]*S,'#60a5fa',2.5);
+    arrow(ctx,cx-v2[0]*S,cy+v2[1]*S,cx+v2[0]*S,cy-v2[1]*S,'#f87171',2.5);
+    ctx.save();
+    ctx.fillStyle='#60a5fa';ctx.font='bold 12px sans-serif';
+    ctx.fillText('λ₁='+ls[0].toFixed(2),cx+v1[0]*S+4,cy-v1[1]*S-4);
+    ctx.fillStyle='#f87171';
+    ctx.fillText('λ₂='+ls[1].toFixed(2),cx+v2[0]*S+4,cy-v2[1]*S-4);
+    ctx.restore();
+  }
+}
+
+// Init first visible section's canvas
+window.addEventListener('load',()=>{ if(window.MathJax) MathJax.typesetPromise(); });
+
+
+const CHAP_MAP = {
+  0:'chap-0',
+  1:'chap-1',2:'chap-1',3:'chap-1',4:'chap-1',5:'chap-1',
+  6:'chap-1',7:'chap-1',8:'chap-1',
+  9:'chap-2',10:'chap-2',11:'chap-2',
+  12:'chap-3',13:'chap-3',14:'chap-3',15:'chap-3',
+  16:'chap-4'
+};
+function toggleChap(id){
+  const grp = document.getElementById(id);
+  if(!grp) return;
+  const isOpen = grp.classList.contains('open');
+  // collapse all
+  document.querySelectorAll('.chapter-group').forEach(g=>g.classList.remove('open'));
+  // toggle clicked
+  if(!isOpen) grp.classList.add('open');
+}
+function openChapFor(n){
+  const cid = CHAP_MAP[n];
+  if(!cid) return;
+  document.querySelectorAll('.chapter-group').forEach(g=>g.classList.remove('open'));
+  const grp = document.getElementById(cid);
+  if(grp) grp.classList.add('open');
+}
+
+function toggleSidebar(){
+  const nav = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const btn = document.getElementById('sidebar-toggle');
+  const collapsed = nav.classList.toggle('collapsed');
+  document.body.classList.toggle('nav-collapsed', collapsed);
+  if(collapsed){
+    main.style.marginLeft='0';
+    btn.style.left='12px';
+    btn.textContent='☰';
+  } else {
+    main.style.marginLeft='220px';
+    btn.style.left='228px';
+    btn.textContent='✕';
+  }
+}
+// Auto-collapse on narrow screens
+if(window.innerWidth <= 860){
+  document.body.classList.add('nav-collapsed');
+}
+window.addEventListener('resize',()=>{
+  const nav = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  if(window.innerWidth <= 860 && !nav.classList.contains('collapsed')){
+    nav.classList.add('collapsed');
+    main.style.marginLeft='0';
+    document.body.classList.add('nav-collapsed');
+  }
+});
+</script>
+</body>
+</html>
