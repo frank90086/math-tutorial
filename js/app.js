@@ -1,4 +1,6 @@
 import { STRANDS, findChapter, countProgress } from "./data/curriculum.js";
+import { getProgress, masteryLabel } from "./engine/progress-store.js";
+import { CHAPTER_CONTENT_LOADERS } from "./content/registry.js";
 
 const sidebarEl = document.getElementById("sidebar");
 const mainEl = document.getElementById("main");
@@ -59,7 +61,7 @@ function renderStrandGroup(strand) {
           <button class="chapter-link ${ch.status}" data-chapter="${ch.id}">
             <span class="chapter-grade">${ch.grade}</span>
             <span class="chapter-title">${ch.title}</span>
-            ${ch.status === "placeholder" ? '<span class="badge">待補</span>' : ""}
+            ${renderChapterBadge(ch)}
           </button>
         `
           )
@@ -67,6 +69,14 @@ function renderStrandGroup(strand) {
       </div>
     </div>
   `;
+}
+
+function renderChapterBadge(chapter) {
+  if (chapter.status === "placeholder") {
+    return '<span class="badge">待補</span>';
+  }
+  const mastered = getProgress(window.localStorage, chapter.id).mastered;
+  return `<span class="badge ${mastered ? "mastered" : "practicing"}">${masteryLabel(mastered)}</span>`;
 }
 
 function renderBottomTabs() {
@@ -129,6 +139,30 @@ function renderPlaceholderChapter(strand, chapter) {
   `;
 }
 
+function renderCompleteChapter(strand, chapter) {
+  mainEl.innerHTML = `
+    <section class="view chapter-view">
+      <p class="breadcrumb">${strand.icon} ${strand.name} ・ ${chapter.grade}</p>
+      <h1>${chapter.title}</h1>
+      <div id="chapter-content-slot"></div>
+    </section>
+  `;
+
+  const loader = CHAPTER_CONTENT_LOADERS[chapter.id];
+  const slot = mainEl.querySelector("#chapter-content-slot");
+  if (!loader) {
+    slot.innerHTML = `<p>這個章節標記為完成，但找不到對應的內容模組。</p>`;
+    return;
+  }
+
+  loader().then((mod) => {
+    // Guard against a stale async render if the user has since navigated away.
+    if (mainEl.querySelector("#chapter-content-slot") === slot) {
+      mod.render(slot, chapter.id);
+    }
+  });
+}
+
 function renderNotFound() {
   mainEl.innerHTML = `
     <section class="view">
@@ -143,6 +177,7 @@ function route() {
   const match = hash.match(/^#\/chapter\/(.+)$/);
 
   if (!match) {
+    renderSidebar();
     renderHome();
     return;
   }
@@ -156,8 +191,11 @@ function route() {
   openStrandId = found.strand.id;
   renderSidebar();
 
-  // Real chapter content modules get wired in here starting with ticket #6.
-  renderPlaceholderChapter(found.strand, found.chapter);
+  if (found.chapter.status === "complete") {
+    renderCompleteChapter(found.strand, found.chapter);
+  } else {
+    renderPlaceholderChapter(found.strand, found.chapter);
+  }
 }
 
 function openMobileSidebar() {

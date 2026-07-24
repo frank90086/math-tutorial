@@ -33,3 +33,9 @@ export function getProgress(storage, chapterId) {
 
   return { attempts, mastered, lastPracticedAt };
 }
+
+// Shared UI label for a mastery boolean, so the sidebar badge and a
+// chapter's own practice panel never drift into showing different wording.
+export function masteryLabel(mastered) {
+  return mastered ? "已練熟" : "尚未練熟";
+}

@@ -1,0 +1,239 @@
+/* Shared styles for chapter content modules (js/content/**). Kept separate
+   from css/style.css so the app shell and chapter content can evolve
+   independently as more chapters are built. */
+
+.chapter-content h2 {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 32px 0 12px;
+}
+.chapter-content h2:first-child {
+  margin-top: 0;
+}
+.chapter-content h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin: 20px 0 8px;
+}
+.chapter-content p {
+  color: var(--text-2);
+  line-height: 1.8;
+  font-size: 14.5px;
+  margin-bottom: 10px;
+}
+
+.concept-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin: 12px 0 20px;
+  box-shadow: var(--shadow);
+}
+
+.insight {
+  display: flex;
+  gap: 12px;
+  background: #eef6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin: 16px 0;
+}
+.insight .icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.insight p {
+  margin: 0;
+  color: var(--text);
+}
+
+.derivation {
+  background: var(--surface-2);
+  border-left: 3px solid var(--primary);
+  border-radius: 0 12px 12px 0;
+  padding: 14px 18px;
+  margin: 14px 0;
+}
+.derivation .step {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 5px 0;
+  font-size: 14.5px;
+}
+.derivation .step .label {
+  font-size: 11px;
+  color: var(--text-3);
+  min-width: 76px;
+  flex-shrink: 0;
+}
+
+/* Interactive demo */
+.demo-area {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin: 16px 0 28px;
+  box-shadow: var(--shadow);
+}
+.demo-equation {
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 18px;
+  font-family: "Cambria Math", Cambria, serif;
+}
+.slider-group {
+  margin: 14px 0;
+}
+.slider-group label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-2);
+  margin-bottom: 6px;
+}
+.slider-group label span {
+  color: var(--primary-dark);
+  font-weight: 700;
+  font-family: monospace;
+}
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--primary);
+}
+.demo-values {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+.demo-value-box {
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-align: center;
+}
+.demo-value-box .demo-label {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-bottom: 4px;
+}
+.demo-value-box .demo-number {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: monospace;
+}
+.balance-indicator {
+  text-align: center;
+  font-weight: 700;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+.balance-indicator.balanced {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+.balance-indicator.unbalanced {
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
+/* Practice area */
+.practice-area {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin: 16px 0;
+  box-shadow: var(--shadow);
+}
+.practice-progress {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-2);
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.mastery-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+}
+.mastery-pill.mastered {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+.mastery-pill.practicing {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.question-prompt {
+  font-size: 15.5px;
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+.answer-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.answer-row input {
+  flex: 1;
+  min-width: 140px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: monospace;
+}
+.answer-row button,
+.next-question-btn {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--primary);
+  color: #fff;
+}
+.answer-row button:hover,
+.next-question-btn:hover {
+  background: var(--primary-dark);
+}
+.next-question-btn {
+  background: var(--surface-2);
+  color: var(--text);
+  margin-top: 10px;
+}
+.next-question-btn:hover {
+  background: var(--border);
+}
+
+.feedback {
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.feedback.correct {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+.feedback.incorrect {
+  background: #fee2e2;
+  color: #b91c1c;
+}

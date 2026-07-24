@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { recordAttempt, getProgress } from "./progress-store.js";
+import { recordAttempt, getProgress, masteryLabel } from "./progress-store.js";
 
 // Mimics the real Web Storage API surface (including `clear()` and key
 // enumeration) so tests never need to know progress-store.js's internal
@@ -106,4 +106,9 @@ test("storage 裡的資料是合法 JSON 但不是陣列（例如遭竄改）時
   assert.deepEqual(progress.attempts, []);
   assert.equal(progress.mastered, false);
   assert.equal(progress.lastPracticedAt, null);
+});
+
+test("masteryLabel 把 mastered 布林值轉成中文標籤", () => {
+  assert.equal(masteryLabel(true), "已練熟");
+  assert.equal(masteryLabel(false), "尚未練熟");
 });

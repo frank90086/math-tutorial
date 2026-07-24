@@ -18,7 +18,7 @@ export const STRANDS = [
     chapters: [
       { id: "alg-7a-1", grade: "七上", title: "整數運算與科學記號", status: "placeholder" },
       { id: "alg-7a-2", grade: "七上", title: "因數分解與分數運算", status: "placeholder" },
-      { id: "alg-7a-3", grade: "七上", title: "一元一次方程式", status: "placeholder" },
+      { id: "alg-7a-3", grade: "七上", title: "一元一次方程式", status: "complete" },
       { id: "alg-7b-1", grade: "七下", title: "二元一次聯立方程式", status: "placeholder" },
       { id: "alg-7b-2", grade: "七下", title: "一元一次不等式", status: "placeholder" },
       { id: "alg-8a-1", grade: "八上", title: "乘法公式與多項式", status: "placeholder" },

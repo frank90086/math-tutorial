@@ -13,6 +13,8 @@
   --grad: linear-gradient(135deg, #3b82f6, #14b8a6);
   --shadow: 0 2px 10px rgba(30, 41, 59, 0.06);
   --radius: 16px;
+  --success-bg: #dcfce7;
+  --success-text: #15803d;
 }
 
 * {
@@ -177,6 +179,14 @@ button {
   background: var(--surface-2);
   color: var(--text-3);
   flex-shrink: 0;
+}
+.badge.mastered {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+.badge.practicing {
+  background: #fef3c7;
+  color: #b45309;
 }
 .chapter-link.complete .chapter-title {
   color: var(--text);
